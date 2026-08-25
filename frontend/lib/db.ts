@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { neon, Pool } from "@neondatabase/serverless";
 import {
   CulturalEvent,
   CulturalEventCreate,
@@ -27,23 +27,24 @@ import {
   SocietyStats,
 } from "./types";
 
-// Setup PostgreSQL pool if DATABASE_URL or POSTGRES_URL is defined
-const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-let pool: Pool | null = null;
+// Check for Neon Database URL in environment
+const neonDbUrl =
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL ||
+  process.env.NEON_DATABASE_URL ||
+  process.env.POSTGRES_PRISMA_URL;
 
-if (dbUrl) {
+let sqlNeon: any = null;
+if (neonDbUrl) {
   try {
-    pool = new Pool({
-      connectionString: dbUrl,
-      ssl: dbUrl.includes("localhost") || dbUrl.includes("127.0.0.1") ? false : { rejectUnauthorized: false },
-    });
+    sqlNeon = neon(neonDbUrl);
+    console.log("Connected to Neon PostgreSQL Serverless DB");
   } catch (e) {
-    console.warn("Could not initialize PostgreSQL pool, using in-memory store", e);
+    console.warn("Could not initialize Neon client, using fallback store", e);
   }
 }
 
 // ----------------- IN-MEMORY FALLBACK STORE -----------------
-// Seed Initial Data
 let festivalsStore: FestivalCelebration[] = [
   {
     id: 1,
