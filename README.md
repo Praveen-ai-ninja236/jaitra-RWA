@@ -1,10 +1,24 @@
 # Jaitra Residents Welfare Association (JRWA) — Governance & Operations Portal
 
-A complete, full-stack community management web portal for **Jaitra Gated Society (Towers A, B, C, D, E, F)** built with **Next.js 14, React, TypeScript, Tailwind CSS** and a **Python FastAPI** backend backed by **PostgreSQL**.
+A complete, full-stack community management web portal for **Jaitra Gated Society (Towers A, B, C, D, E, F)** built with **Next.js 14, React, TypeScript, Tailwind CSS**, **PostgreSQL**, and **Python FastAPI**.
 
 ---
 
-## 🏛️ Features & Architecture
+## ☁️ Deploy to Vercel (One-Click)
+
+The repository is pre-configured to deploy seamlessly on **Vercel** with zero configuration:
+
+1. Push your code to GitHub: `https://github.com/Praveen-ai-ninja236/jaitra-RWA.git`
+2. Go to **[vercel.com](https://vercel.com)** &rarr; **Add New Project** &rarr; select **`jaitra-RWA`**.
+3. (Optional) If you have a hosted PostgreSQL database (Vercel Postgres, Supabase, Neon, AWS RDS), add the environment variable in Vercel:
+   ```env
+   DATABASE_URL=postgresql://user:password@host:5432/jaitra_db
+   ```
+4. Click **Deploy**. Vercel will build and host both the frontend and all 26 serverless API endpoints instantly!
+
+---
+
+## 🏛️ Portal Features & Architecture
 
 ### 1. Cultural Events (`Tab 1`)
 * Intra-society sports tournaments (Badminton, Cricket) & youth robotics/pottery bootcamps.
@@ -63,30 +77,19 @@ The complete SQL schema and data migration file is located at:
 
 ---
 
-## ⚡ How to Push Tables to PostgreSQL `jaitra_db`
+## 🚀 Local Development
 
-### In pgAdmin 4:
-1. Open **pgAdmin 4** &rarr; connect to `PostgreSQL 18` &rarr; open database **`jaitra_db`**.
-2. Open the **Query Tool** on `jaitra_db`.
-3. Open or paste the contents of `backend/jaitra_postgresql_schema_and_data.sql`.
-4. Click **Execute / Run (▶)** (or press `F5`).
-5. All 12 tables and rows will be created in your database.
+### 1. Start the Next.js Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Open **`http://localhost:3000`** in your browser.
 
----
-
-## 🚀 Running the Full Stack Application
-
-### 1. Start the Python FastAPI Backend
+### 2. (Optional) Python FastAPI Backend
 ```bash
 cd backend
 source ../.venv/bin/activate
 uvicorn main:app --reload --port 8000
 ```
-*The backend connects to PostgreSQL `jaitra_db` on port 5432.*
-
-### 2. Start the Next.js Frontend
-```bash
-cd frontend
-npm run dev
-```
-Open **`http://localhost:3000`** in your browser. All reads, writes, edits, approvals, and attachments will persist live in your database.

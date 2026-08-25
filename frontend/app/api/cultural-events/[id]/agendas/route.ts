@@ -1,0 +1,12 @@
+import { NextRequest, NextResponse } from "next/server";
+import * as db from "@/lib/db";
+
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const body = await req.json();
+    const created = await db.addCulturalAgenda(parseInt(params.id), body);
+    return NextResponse.json(created);
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
+}
