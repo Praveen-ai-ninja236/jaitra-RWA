@@ -1,0 +1,1031 @@
+"use client";
+
+import React, { useState } from "react";
+import {
+  ADOTask,
+  ADOTaskCreate,
+  ADOCommentCreate,
+  ADOAttachmentCreate
+} from "../lib/types";
+import {
+  Kanban,
+  Plus,
+  Search,
+  Filter,
+  ArrowRight,
+  AlertOctagon,
+  Clock,
+  Calendar,
+  User,
+  CheckCircle2,
+  Trash2,
+  Building,
+  Shield,
+  Layers,
+  Sparkles,
+  ChevronRight,
+  ChevronLeft,
+  Flame,
+  CheckSquare,
+  MessageSquare,
+  Paperclip,
+  Send,
+  Edit3,
+  ExternalLink,
+  FileText,
+  FileCheck2
+} from "lucide-react";
+import Modal from "./Modal";
+
+interface ADOBorderPendingsTabProps {
+  tasks: ADOTask[];
+  onAddTask: (task: ADOTaskCreate) => Promise<void>;
+  onUpdateTask: (id: number, task: ADOTaskCreate) => Promise<void>;
+  onUpdateStatus: (id: number, status: string, progress?: number, blockers?: string) => Promise<void>;
+  onDeleteTask: (id: number) => Promise<void>;
+  onAddComment: (taskId: number, comment: ADOCommentCreate) => Promise<void>;
+  onAddAttachment: (taskId: number, attachment: ADOAttachmentCreate) => Promise<void>;
+  onDeleteAttachment: (attachmentId: number) => Promise<void>;
+  isLoading: boolean;
+}
+
+export default function ADOBorderPendingsTab({
+  tasks,
+  onAddTask,
+  onUpdateTask,
+  onUpdateStatus,
+  onDeleteTask,
+  onAddComment,
+  onAddAttachment,
+  onDeleteAttachment,
+  isLoading,
+}: ADOBorderPendingsTabProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedEntity, setSelectedEntity] = useState<"All" | "Builder" | "IGS">("All");
+  const [selectedPriority, setSelectedPriority] = useState("All");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [activeTaskDetail, setActiveTaskDetail] = useState<ADOTask | null>(null);
+  const [taskDetailTab, setTaskDetailTab] = useState<"discussion" | "evidence" | "edit">("discussion");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // New ADO Task Form State
+  const [formData, setFormData] = useState<ADOTaskCreate>({
+    task_code: "",
+    title: "",
+    assigned_to: "Builder",
+    entity_type: "Builder",
+    category: "Seepage & Waterproofing",
+    status: "New",
+    priority: "High",
+    assignee_name: "Er. K. Verma (Builder Project Head)",
+    due_date: "2026-09-30",
+    sla_days: 14,
+    blockers: "",
+    description: "",
+    completion_percentage: 0,
+    tags: "Handover, Structural, Warranty",
+  });
+
+  // Comment Form State
+  const [commentText, setCommentText] = useState("");
+  const [commentAuthor, setCommentAuthor] = useState("Rajesh Sharma");
+  const [commentRole, setCommentRole] = useState("MC President");
+
+  // Attachment Form State
+  const [attData, setAttData] = useState<ADOAttachmentCreate>({
+    file_name: "",
+    file_url: "",
+    description: "",
+    uploaded_by: "Karthik Venkatesh (MC Maintenance)",
+  });
+
+  const columns: Array<{ id: ADOTask["status"]; title: string; headerBorder: string; badgeBg: string; dotColor: string }> = [
+    { id: "New", title: "New / Backlog", headerBorder: "border-slate-700", badgeBg: "bg-slate-800 text-slate-300 border border-slate-700", dotColor: "bg-slate-400" },
+    { id: "Active", title: "Active / In Progress", headerBorder: "border-sky-500/40", badgeBg: "bg-sky-950 text-sky-300 border border-sky-700/60", dotColor: "bg-sky-400" },
+    { id: "Resolved", title: "Resolved / Inspection", headerBorder: "border-emerald-500/40", badgeBg: "bg-emerald-950 text-emerald-300 border border-emerald-700/60", dotColor: "bg-emerald-400" },
+    { id: "Closed", title: "Closed & Signed-off", headerBorder: "border-indigo-500/40", badgeBg: "bg-indigo-950 text-indigo-300 border border-indigo-700/60", dotColor: "bg-indigo-400" },
+  ];
+
+  const categories = [
+    "All",
+    "Seepage & Waterproofing",
+    "Fire NOC & Compliance",
+    "STP & WTP Operations",
+    "Lifts & Elevators",
+    "Solar & Electrical Grid",
+    "CCTV & Gate Automation",
+    "Clubhouse & Amenities",
+    "Landscaping & Boundary",
+  ];
+
+  const priorities = ["All", "Critical", "High", "Medium", "Low"];
+
+  const filteredTasks = tasks.filter((t) => {
+    const matchSearch =
+      t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.task_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (t.assignee_name && t.assignee_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (t.tags && t.tags.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchEntity =
+      selectedEntity === "All" ||
+      t.assigned_to.toLowerCase().includes(selectedEntity.toLowerCase()) ||
+      t.entity_type === selectedEntity;
+    const matchPriority = selectedPriority === "All" || t.priority === selectedPriority;
+    return matchSearch && matchEntity && matchPriority;
+  });
+
+  const handleCreateTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title) return;
+    setIsSubmitting(true);
+    try {
+      await onAddTask(formData);
+      setIsAddModalOpen(false);
+      setFormData({
+        task_code: "",
+        title: "",
+        assigned_to: "Builder",
+        entity_type: "Builder",
+        category: "Seepage & Waterproofing",
+        status: "New",
+        priority: "High",
+        assignee_name: "Er. K. Verma (Builder Project Head)",
+        due_date: "2026-09-30",
+        sla_days: 14,
+        blockers: "",
+        description: "",
+        completion_percentage: 0,
+        tags: "Handover, Structural, Warranty",
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateTaskSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeTaskDetail) return;
+    try {
+      await onUpdateTask(activeTaskDetail.id, {
+        task_code: activeTaskDetail.task_code,
+        title: activeTaskDetail.title,
+        assigned_to: activeTaskDetail.assigned_to,
+        entity_type: activeTaskDetail.entity_type,
+        category: activeTaskDetail.category,
+        status: activeTaskDetail.status,
+        priority: activeTaskDetail.priority,
+        assignee_name: activeTaskDetail.assignee_name,
+        due_date: activeTaskDetail.due_date,
+        sla_days: activeTaskDetail.sla_days,
+        blockers: activeTaskDetail.blockers,
+        description: activeTaskDetail.description,
+        completion_percentage: activeTaskDetail.completion_percentage,
+        tags: activeTaskDetail.tags,
+      });
+      alert("ADO Deliverable details updated successfully!");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAddCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeTaskDetail || !commentText.trim()) return;
+    try {
+      await onAddComment(activeTaskDetail.id, {
+        author_name: commentAuthor,
+        author_role: commentRole,
+        comment_text: commentText.trim(),
+        created_at: new Date().toLocaleString(),
+      });
+      setCommentText("");
+      const updated = tasks.find(t => t.id === activeTaskDetail.id);
+      if (updated) setActiveTaskDetail(updated);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAddAttachmentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeTaskDetail || !attData.file_name || !attData.file_url) return;
+    try {
+      await onAddAttachment(activeTaskDetail.id, attData);
+      setAttData({
+        file_name: "",
+        file_url: "",
+        description: "",
+        uploaded_by: "Karthik Venkatesh (MC Maintenance)",
+      });
+      const updated = tasks.find(t => t.id === activeTaskDetail.id);
+      if (updated) setActiveTaskDetail(updated);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const getNextStatus = (currentStatus: string): ADOTask["status"] | null => {
+    if (currentStatus === "New") return "Active";
+    if (currentStatus === "Active") return "Resolved";
+    if (currentStatus === "Resolved") return "Closed";
+    return null;
+  };
+
+  const getPrevStatus = (currentStatus: string): ADOTask["status"] | null => {
+    if (currentStatus === "Closed") return "Resolved";
+    if (currentStatus === "Resolved") return "Active";
+    if (currentStatus === "Active") return "New";
+    return null;
+  };
+
+  const currentComments = activeTaskDetail?.comments || [];
+  const currentAttachments = activeTaskDetail?.attachments || [];
+
+  return (
+    <div className="space-y-6">
+      {/* ADO Board Header */}
+      <div className="bg-slate-900/90 border border-slate-800 p-6 rounded-2xl shadow-xl flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <div className="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
+            <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+              5. Pendings List with Builder &amp; IGS (ADO Board)
+            </h2>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            Azure DevOps-style board tracking handover deliverables, discussions, and evidence audit attachments.
+          </p>
+        </div>
+
+        {/* Entity Switcher & Add Button */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="inline-flex bg-slate-950 p-1 rounded-xl border border-slate-800 shadow-inner">
+            {(["All", "Builder", "IGS"] as const).map((ent) => {
+              const count =
+                ent === "All"
+                  ? tasks.length
+                  : tasks.filter((t) => t.assigned_to.includes(ent) || t.entity_type === ent).length;
+              const isSelected = selectedEntity === ent;
+              return (
+                <button
+                  key={ent}
+                  onClick={() => setSelectedEntity(ent)}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                    isSelected
+                      ? "bg-slate-800 text-white shadow-md border border-slate-700"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  {ent === "Builder" && <Building className="w-3.5 h-3.5 text-orange-400" />}
+                  {ent === "IGS" && <Shield className="w-3.5 h-3.5 text-purple-400" />}
+                  <span>{ent === "All" ? "All Items" : `${ent} Only`}</span>
+                  <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${isSelected ? "bg-slate-900 text-sky-300" : "bg-slate-800 text-slate-500"}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs sm:text-sm font-extrabold px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 transition transform active:scale-95 hover:scale-[1.02]"
+          >
+            <Plus className="w-4 h-4 text-slate-950" />
+            <span>New ADO Work Item</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Filter and Search Bar */}
+      <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-xl shadow-md flex flex-wrap items-center justify-between gap-3">
+        <div className="relative flex-1 min-w-[240px]">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search ADO code (e.g. ADO-101), engineer, title, tag..."
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 bg-slate-800/80 text-white placeholder-slate-400"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-xs">
+            <span className="text-slate-400 font-medium">Priority:</span>
+            <select
+              value={selectedPriority}
+              onChange={(e) => setSelectedPriority(e.target.value)}
+              className="bg-transparent font-bold text-white focus:outline-none cursor-pointer"
+            >
+              {priorities.map((p) => (
+                <option key={p} value={p} className="bg-slate-900 text-white">{p}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* ADO Kanban Columns */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
+        {columns.map((col) => {
+          const colTasks = filteredTasks.filter((t) => t.status === col.id);
+
+          return (
+            <div
+              key={col.id}
+              className="bg-slate-950/70 rounded-2xl p-4 border border-slate-800/90 min-h-[480px] flex flex-col shadow-lg"
+            >
+              {/* Column Header */}
+              <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-slate-800">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${col.dotColor}`} />
+                  <span className="text-xs font-extrabold text-slate-200 tracking-wider uppercase">{col.title}</span>
+                </div>
+                <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full ${col.badgeBg}`}>
+                  {colTasks.length}
+                </span>
+              </div>
+
+              {/* Task Cards Column Body */}
+              <div className="space-y-3 flex-1">
+                {colTasks.length === 0 ? (
+                  <div className="h-36 flex flex-col items-center justify-center text-center p-4 border border-dashed border-slate-800 rounded-xl bg-slate-900/30">
+                    <CheckSquare className="w-6 h-6 text-slate-700 mb-1" />
+                    <p className="text-xs text-slate-500 font-medium">No items in this state</p>
+                  </div>
+                ) : (
+                  colTasks.map((task) => {
+                    const isBuilder = task.assigned_to.includes("Builder") || task.entity_type === "Builder";
+                    const nextSt = getNextStatus(task.status);
+                    const prevSt = getPrevStatus(task.status);
+                    const commentCount = task.comments?.length || 0;
+                    const attCount = task.attachments?.length || 0;
+
+                    return (
+                      <div
+                        key={task.id}
+                        className="bg-slate-900/90 rounded-xl p-4 border border-slate-800 shadow-md hover:border-slate-700 hover:shadow-xl transition-all duration-200 group"
+                      >
+                        {/* Top ID, Entity Pill & Delete */}
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="font-mono text-[11px] font-extrabold text-sky-400 bg-sky-950/90 border border-sky-800 px-2 py-0.5 rounded-md">
+                            {task.task_code || `ADO-${task.id}`}
+                          </span>
+
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
+                                isBuilder
+                                  ? "bg-orange-950 text-orange-300 border-orange-700/60"
+                                  : "bg-purple-950 text-purple-300 border-purple-700/60"
+                              }`}
+                            >
+                              {task.assigned_to}
+                            </span>
+
+                            <button
+                              onClick={() => onDeleteTask(task.id)}
+                              title="Delete ADO Item"
+                              className="text-slate-600 hover:text-rose-400 p-0.5 transition"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Title - Click to open discussion / evidence modal */}
+                        <h4
+                          onClick={() => {
+                            setActiveTaskDetail(task);
+                            setTaskDetailTab("discussion");
+                          }}
+                          className="text-xs sm:text-sm font-bold text-white leading-snug cursor-pointer group-hover:text-amber-300 transition"
+                        >
+                          {task.title}
+                        </h4>
+
+                        {/* Category tag */}
+                        <div className="mt-2 flex items-center gap-1 text-[10px] text-slate-400 font-medium">
+                          <Layers className="w-3 h-3 text-slate-500" />
+                          <span className="truncate">{task.category}</span>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="mt-3">
+                          <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono mb-1">
+                            <span>Resolution Progress</span>
+                            <span className="font-bold text-slate-200">{task.completion_percentage}%</span>
+                          </div>
+                          <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-300 ${
+                                task.completion_percentage === 100
+                                  ? "bg-emerald-400"
+                                  : task.completion_percentage > 50
+                                  ? "bg-sky-400"
+                                  : "bg-amber-400"
+                              }`}
+                              style={{ width: `${task.completion_percentage}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Blockers Alert if any */}
+                        {task.blockers && task.status !== "Closed" && (
+                          <div className="mt-2.5 p-2 bg-rose-950/60 rounded-lg border border-rose-800/60 flex items-start gap-1.5 text-[11px] text-rose-200">
+                            <AlertOctagon className="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5" />
+                            <p className="line-clamp-2 leading-tight font-medium">{task.blockers}</p>
+                          </div>
+                        )}
+
+                        {/* Discussion & Evidence Pill Counters */}
+                        <div className="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between text-[11px]">
+                          <button
+                            onClick={() => {
+                              setActiveTaskDetail(task);
+                              setTaskDetailTab("discussion");
+                            }}
+                            className="flex items-center gap-1 text-slate-400 hover:text-sky-300 transition"
+                          >
+                            <MessageSquare className="w-3 h-3 text-sky-400" />
+                            <span>{commentCount} Discussions</span>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setActiveTaskDetail(task);
+                              setTaskDetailTab("evidence");
+                            }}
+                            className="flex items-center gap-1 text-slate-400 hover:text-amber-300 transition"
+                          >
+                            <Paperclip className="w-3 h-3 text-amber-400" />
+                            <span>{attCount} Proofs</span>
+                          </button>
+                        </div>
+
+                        {/* Assignee & Due Date */}
+                        <div className="mt-2.5 flex flex-col gap-1 text-[11px] text-slate-400">
+                          {task.assignee_name && (
+                            <div className="flex items-center gap-1.5 text-slate-300 font-semibold">
+                              <User className="w-3 h-3 text-slate-500 shrink-0" />
+                              <span className="truncate">{task.assignee_name}</span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between gap-1 text-slate-400">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3 text-slate-500" />
+                              <span>{task.due_date || "No date"}</span>
+                            </div>
+
+                            <span
+                              className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded border ${
+                                task.priority === "Critical"
+                                  ? "bg-rose-950 text-rose-300 border-rose-600"
+                                  : task.priority === "High"
+                                  ? "bg-amber-950 text-amber-300 border-amber-600"
+                                  : "bg-slate-800 text-slate-300 border-slate-700"
+                              }`}
+                            >
+                              {task.priority}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* ADO Column Quick Movement Navigation */}
+                        <div className="mt-3 pt-2 border-t border-slate-800 flex items-center justify-between gap-1">
+                          {prevSt ? (
+                            <button
+                              onClick={() => onUpdateStatus(task.id, prevSt)}
+                              className="text-[10px] font-semibold text-slate-400 hover:text-white flex items-center gap-0.5 px-2 py-1 rounded hover:bg-slate-800 transition"
+                            >
+                              <ChevronLeft className="w-3 h-3" />
+                              <span>{prevSt}</span>
+                            </button>
+                          ) : <div />}
+
+                          {nextSt && (
+                            <button
+                              onClick={() => onUpdateStatus(task.id, nextSt)}
+                              className="text-[10px] font-bold text-sky-300 hover:text-white hover:bg-sky-500/20 flex items-center gap-0.5 px-2.5 py-1 rounded border border-sky-400/30 transition ml-auto"
+                            >
+                              <span>Move to {nextSt}</span>
+                              <ChevronRight className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Interactive ADO Work Item Detail / Discussion & Evidence Modal */}
+      {activeTaskDetail && (
+        <Modal
+          isOpen={Boolean(activeTaskDetail)}
+          onClose={() => setActiveTaskDetail(null)}
+          title={`${activeTaskDetail.task_code || "ADO"}: ${activeTaskDetail.title}`}
+          subtitle="Work Item Discussion, Audit Evidence Proofs & SLA Details"
+          maxWidth="2xl"
+        >
+          <div className="space-y-5">
+            {/* Sub-tab Navigation */}
+            <div className="flex space-x-2 border-b border-slate-800 pb-2">
+              <button
+                onClick={() => setTaskDetailTab("discussion")}
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 ${
+                  taskDetailTab === "discussion"
+                    ? "bg-sky-600 text-white"
+                    : "text-slate-400 hover:text-white bg-slate-800"
+                }`}
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>Discussion Thread ({currentComments.length})</span>
+              </button>
+
+              <button
+                onClick={() => setTaskDetailTab("evidence")}
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 ${
+                  taskDetailTab === "evidence"
+                    ? "bg-amber-600 text-slate-950 font-extrabold"
+                    : "text-slate-400 hover:text-white bg-slate-800"
+                }`}
+              >
+                <Paperclip className="w-3.5 h-3.5" />
+                <span>Evidence &amp; Test Proofs ({currentAttachments.length})</span>
+              </button>
+
+              <button
+                onClick={() => setTaskDetailTab("edit")}
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 ${
+                  taskDetailTab === "edit"
+                    ? "bg-indigo-600 text-white"
+                    : "text-slate-400 hover:text-white bg-slate-800"
+                }`}
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Edit Work Item</span>
+              </button>
+            </div>
+
+            {/* TAB 1: DISCUSSION THREAD */}
+            {taskDetailTab === "discussion" && (
+              <div className="space-y-4">
+                {/* Discussion Log List */}
+                <div className="space-y-3 max-h-64 overflow-y-auto p-1">
+                  {currentComments.length === 0 ? (
+                    <p className="text-center text-slate-500 py-6 text-xs italic">
+                      No discussion comments yet. Post the first update below.
+                    </p>
+                  ) : (
+                    currentComments.map((c) => (
+                      <div key={c.id} className="p-3.5 bg-slate-800/80 rounded-xl border border-slate-700 text-xs">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-white">{c.author_name}</span>
+                            <span className="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.2 rounded font-semibold">
+                              {c.author_role}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-mono">{c.created_at}</span>
+                        </div>
+                        <p className="text-slate-200 leading-relaxed">{c.comment_text}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Add Comment Box */}
+                <form onSubmit={handleAddCommentSubmit} className="p-3.5 bg-slate-950 rounded-xl border border-sky-900/40 space-y-2.5">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Your Name</label>
+                      <input
+                        type="text"
+                        value={commentAuthor}
+                        onChange={(e) => setCommentAuthor(e.target.value)}
+                        className="w-full text-xs p-2 rounded bg-slate-800 border border-slate-700 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Role / Designation</label>
+                      <input
+                        type="text"
+                        value={commentRole}
+                        onChange={(e) => setCommentRole(e.target.value)}
+                        className="w-full text-xs p-2 rounded bg-slate-800 border border-slate-700 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <textarea
+                      rows={2}
+                      required
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      placeholder="Write comment / minutes on inspection update with Builder & IGS..."
+                      className="w-full text-xs p-2 rounded bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-sky-500"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 shadow-sm"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Post Comment to Discussion</span>
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* TAB 2: EVIDENCE ATTACHMENTS */}
+            {taskDetailTab === "evidence" && (
+              <div className="space-y-4">
+                {/* Upload / Link Evidence Form */}
+                <form onSubmit={handleAddAttachmentSubmit} className="p-4 bg-slate-950 rounded-xl border border-amber-900/40 space-y-3">
+                  <h4 className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                    <Paperclip className="w-3.5 h-3.5" />
+                    <span>Attach Inspection Report / Defect Photo / Test Certificate</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Document / Proof Title *</label>
+                      <input
+                        type="text"
+                        required
+                        value={attData.file_name}
+                        onChange={(e) => setAttData({ ...attData, file_name: e.target.value })}
+                        placeholder="e.g. PU_Injection_Test_Report_B2.pdf"
+                        className="w-full text-xs p-2 rounded bg-slate-800 border border-slate-700 text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">File URL / Download Path *</label>
+                      <input
+                        type="text"
+                        required
+                        value={attData.file_url}
+                        onChange={(e) => setAttData({ ...attData, file_url: e.target.value })}
+                        placeholder="e.g. /evidence/Inspection_B2_Aug.pdf"
+                        className="w-full text-xs p-2 rounded bg-slate-800 border border-slate-700 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Description / Summary</label>
+                      <input
+                        type="text"
+                        value={attData.description || ""}
+                        onChange={(e) => setAttData({ ...attData, description: e.target.value })}
+                        placeholder="e.g. Signed inspection report with Builder engineers"
+                        className="w-full text-xs p-2 rounded bg-slate-800 border border-slate-700 text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Uploaded By</label>
+                      <input
+                        type="text"
+                        value={attData.uploaded_by}
+                        onChange={(e) => setAttData({ ...attData, uploaded_by: e.target.value })}
+                        className="w-full text-xs p-2 rounded bg-slate-800 border border-slate-700 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs rounded-lg transition shadow-sm"
+                  >
+                    + Attach Evidence Document to Work Item
+                  </button>
+                </form>
+
+                {/* Evidence List */}
+                <div className="space-y-2.5 max-h-60 overflow-y-auto">
+                  {currentAttachments.length === 0 ? (
+                    <p className="text-center text-slate-500 py-4 text-xs italic">No evidence proofs attached yet.</p>
+                  ) : (
+                    currentAttachments.map((att) => (
+                      <div key={att.id} className="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2.5">
+                          <FileText className="w-4 h-4 text-amber-400 shrink-0" />
+                          <div>
+                            <a href={att.file_url} target="_blank" rel="noreferrer" className="font-bold text-white hover:text-sky-300 hover:underline flex items-center gap-1">
+                              <span>{att.file_name}</span>
+                              <ExternalLink className="w-3 h-3 text-sky-400" />
+                            </a>
+                            <p className="text-[11px] text-slate-400">{att.description || "Evidence attachment"} • Uploaded by {att.uploaded_by} on {att.created_at}</p>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => onDeleteAttachment(att.id)}
+                          className="text-slate-500 hover:text-rose-400 p-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: EDIT WORK ITEM */}
+            {taskDetailTab === "edit" && (
+              <form onSubmit={handleUpdateTaskSubmit} className="space-y-3.5 text-xs">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Work Item Title *</label>
+                  <input
+                    type="text"
+                    required
+                    value={activeTaskDetail.title}
+                    onChange={(e) => setActiveTaskDetail({ ...activeTaskDetail, title: e.target.value })}
+                    className="w-full p-2 rounded bg-slate-800 border border-slate-700 text-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">Assigned Entity</label>
+                    <select
+                      value={activeTaskDetail.assigned_to}
+                      onChange={(e) => setActiveTaskDetail({ ...activeTaskDetail, assigned_to: e.target.value, entity_type: e.target.value === "IGS" ? "IGS" : "Builder" })}
+                      className="w-full p-2 rounded bg-slate-800 border border-slate-700 text-white"
+                    >
+                      <option value="Builder">Builder (Praneeth KKR)</option>
+                      <option value="IGS">IGS (Facility)</option>
+                      <option value="Joint Taskforce">Joint Taskforce</option>
+                      <option value="Association">Association</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">Status</label>
+                    <select
+                      value={activeTaskDetail.status}
+                      onChange={(e) => setActiveTaskDetail({ ...activeTaskDetail, status: e.target.value })}
+                      className="w-full p-2 rounded bg-slate-800 border border-slate-700 text-white"
+                    >
+                      <option value="New">New / Backlog</option>
+                      <option value="Active">Active / In Progress</option>
+                      <option value="Resolved">Resolved / Ready</option>
+                      <option value="Closed">Closed</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">Priority</label>
+                    <select
+                      value={activeTaskDetail.priority}
+                      onChange={(e) => setActiveTaskDetail({ ...activeTaskDetail, priority: e.target.value })}
+                      className="w-full p-2 rounded bg-slate-800 border border-slate-700 text-white"
+                    >
+                      <option value="Critical">Critical</option>
+                      <option value="High">High</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Low">Low</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">Progress (%)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={activeTaskDetail.completion_percentage}
+                      onChange={(e) => setActiveTaskDetail({ ...activeTaskDetail, completion_percentage: parseInt(e.target.value) || 0 })}
+                      className="w-full p-2 rounded bg-slate-800 border border-slate-700 text-white font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">Target Due Date</label>
+                    <input
+                      type="date"
+                      value={activeTaskDetail.due_date || ""}
+                      onChange={(e) => setActiveTaskDetail({ ...activeTaskDetail, due_date: e.target.value })}
+                      className="w-full p-2 rounded bg-slate-800 border border-slate-700 text-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Blockers / Dependencies</label>
+                  <input
+                    type="text"
+                    value={activeTaskDetail.blockers || ""}
+                    onChange={(e) => setActiveTaskDetail({ ...activeTaskDetail, blockers: e.target.value })}
+                    className="w-full p-2 rounded bg-slate-800 border border-slate-700 text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Description &amp; Handover Scope</label>
+                  <textarea
+                    rows={3}
+                    value={activeTaskDetail.description || ""}
+                    onChange={(e) => setActiveTaskDetail({ ...activeTaskDetail, description: e.target.value })}
+                    className="w-full p-2 rounded bg-slate-800 border border-slate-700 text-white"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-md transition"
+                >
+                  Save Deliverable Changes to DB
+                </button>
+              </form>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* Add Task Modal */}
+      <Modal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        title="Create New ADO Punchlist Work Item"
+        subtitle="Assign critical handover deliverables to Builder or IGS Facility team"
+        maxWidth="lg"
+      >
+        <form onSubmit={handleCreateTask} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">Work Item Title *</label>
+            <input
+              type="text"
+              required
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              placeholder="e.g., STP Odor Filter Media Replacement & BOD Certification"
+              className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-amber-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Assigned Entity *</label>
+              <select
+                value={formData.assigned_to}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData({
+                    ...formData,
+                    assigned_to: val,
+                    entity_type: val === "IGS" ? "IGS" : "Builder",
+                  });
+                }}
+                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-amber-500"
+              >
+                <option value="Builder">Builder (Praneeth KKR)</option>
+                <option value="IGS">IGS (Facility Management)</option>
+                <option value="Joint Taskforce">Joint Taskforce</option>
+                <option value="Association">Association Oversight</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Category *</label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-amber-500"
+              >
+                <option value="Seepage & Waterproofing">Seepage &amp; Waterproofing</option>
+                <option value="Fire NOC & Compliance">Fire NOC &amp; Compliance</option>
+                <option value="STP & WTP Operations">STP &amp; WTP Operations</option>
+                <option value="Lifts & Elevators">Lifts &amp; Elevators</option>
+                <option value="Solar & Electrical Grid">Solar &amp; Electrical Grid</option>
+                <option value="CCTV & Gate Automation">CCTV &amp; Gate Automation</option>
+                <option value="Clubhouse & Amenities">Clubhouse &amp; Amenities</option>
+                <option value="Landscaping & Boundary">Landscaping &amp; Boundary</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Status</label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-amber-500"
+              >
+                <option value="New">New / Backlog</option>
+                <option value="Active">Active / In Progress</option>
+                <option value="Resolved">Resolved / Ready</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Priority</label>
+              <select
+                value={formData.priority}
+                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-amber-500"
+              >
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">SLA (Days)</label>
+              <input
+                type="number"
+                value={formData.sla_days}
+                onChange={(e) => setFormData({ ...formData, sla_days: parseInt(e.target.value) || 7 })}
+                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-amber-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Assigned Engineer / POC</label>
+              <input
+                type="text"
+                value={formData.assignee_name}
+                onChange={(e) => setFormData({ ...formData, assignee_name: e.target.value })}
+                placeholder="e.g., Er. K. Verma / Suresh R."
+                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-amber-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Target Due Date</label>
+              <input
+                type="date"
+                value={formData.due_date}
+                onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-amber-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">Description &amp; Handover Criteria</label>
+            <textarea
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Outline specific technical deliverables, test reports needed..."
+              className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-amber-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">Blockers / Dependencies (if any)</label>
+            <input
+              type="text"
+              value={formData.blockers}
+              onChange={(e) => setFormData({ ...formData, blockers: e.target.value })}
+              placeholder="e.g., Awaiting spare parts from OEM Bengaluru"
+              className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-amber-500"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+            <button
+              type="button"
+              onClick={() => setIsAddModalOpen(false)}
+              className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-lg transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-5 py-2.5 text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 rounded-xl shadow-md transition disabled:opacity-50"
+            >
+              {isSubmitting ? "Creating..." : "Add to ADO Board"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+}
