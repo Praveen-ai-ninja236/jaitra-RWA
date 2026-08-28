@@ -78,13 +78,13 @@ export default function AuthModal({
   const handleQuickSelect = (quickRole: UserRole) => {
     if (quickRole === "Super Admin") {
       setSignInEmail("superadmin@jaitra.org");
-      setSignInPassword("admin123");
+      setSignInPassword("");
     } else if (quickRole === "Admin") {
       setSignInEmail("treasurer@jaitra.org");
-      setSignInPassword("treasurer123");
+      setSignInPassword("");
     } else {
       setSignInEmail("resident@jaitra.org");
-      setSignInPassword("user123");
+      setSignInPassword("");
     }
   };
 
