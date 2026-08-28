@@ -694,6 +694,7 @@ export default function JaitraPortal() {
         stats={stats}
         onSelectTab={handleTabChange}
         onOpenAuditReport={handleOpenAuditReport}
+        currentUser={currentUser}
       />
 
       {/* Sticky Tabs Navigation */}

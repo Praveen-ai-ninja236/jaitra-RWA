@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { SocietyStats } from "../lib/types";
+import { SocietyStats, AppUser } from "../lib/types";
 import {
   Calendar,
   Sparkles,
@@ -22,9 +22,10 @@ interface HeroBannerProps {
   stats: SocietyStats | null;
   onSelectTab: (tabId: string) => void;
   onOpenAuditReport?: () => void;
+  currentUser?: AppUser | null;
 }
 
-export default function HeroBanner({ stats, onSelectTab, onOpenAuditReport }: HeroBannerProps) {
+export default function HeroBanner({ stats, onSelectTab, onOpenAuditReport, currentUser }: HeroBannerProps) {
   return (
     <div className="bg-gradient-to-br from-[#03132e] via-[#072454] to-[#0c4a9e] text-white shadow-xl relative overflow-hidden border-b border-sky-900/40">
       {/* Background glowing orbs */}
@@ -70,6 +71,10 @@ export default function HeroBanner({ stats, onSelectTab, onOpenAuditReport }: He
 
               <button
                 onClick={() => {
+                  if (!currentUser) {
+                    alert("Please sign in to view the Financial Audit Report.");
+                    return;
+                  }
                   if (onOpenAuditReport) {
                     onOpenAuditReport();
                   } else {

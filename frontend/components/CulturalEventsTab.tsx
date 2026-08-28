@@ -983,7 +983,7 @@ export default function CulturalEventsTab({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Coordinator Contact</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Coordinator Contact (Optional)</label>
               <input
                 type="text"
                 value={formData.coordinator_contact}
@@ -1120,7 +1120,7 @@ export default function CulturalEventsTab({
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Coordinator Contact</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Coordinator Contact (Optional)</label>
                 <input
                   type="text"
                   value={editingEvent.coordinator_contact || ""}
