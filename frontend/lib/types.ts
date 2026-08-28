@@ -229,6 +229,30 @@ export interface TeamMember {
 
 export type TeamMemberCreate = Omit<TeamMember, "id">;
 
+export interface VendorContract {
+  id: number;
+  vendor_name: string;
+  category: string; // Amenities & EV Charging | Lifts & Elevators AMC | STP & WTP Operations | Security & Surveillance | Fire Safety & Compliance | Solar & Power Infrastructure | Housekeeping & Facility | Plumbing & Civil
+  service_type: string;
+  contact_person?: string;
+  contact_phone?: string;
+  contact_email?: string;
+  contract_start_date?: string;
+  contract_end_date?: string;
+  contract_value?: string;
+  functional_status: "Operational" | "Under Maintenance" | "Degraded" | "Pending Parts" | string;
+  verification_status: "Verified & Compliant" | "Pending Inspection" | "Non-Compliant" | string;
+  rating?: number;
+  feedback_summary?: string;
+  scope_of_work?: string;
+  contract_doc_url?: string;
+  certificate_url?: string;
+  bidding_notes?: string;
+  created_at?: string;
+}
+
+export type VendorContractCreate = Omit<VendorContract, "id">;
+
 export interface SocietyStats {
   cultural_events_count: number;
   festivals_count: number;
@@ -241,6 +265,7 @@ export interface SocietyStats {
   active_ado_tasks: number;
   resolved_ado_tasks: number;
   team_members_count: number;
+  vendors_count?: number;
   tower_issue_counts?: Record<string, number>;
   society_name: string;
   total_towers: number;

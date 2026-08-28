@@ -31,6 +31,8 @@ import {
   AppUser,
   AppUserRegister,
   UserRole,
+  VendorContract,
+  VendorContractCreate,
 } from "./types";
 
 // Neon Database URL - checking all potential environment variables
@@ -73,6 +75,7 @@ export async function getStats(): Promise<SocietyStats> {
         issues,
         tasks,
         teamCount,
+        vendorsCount,
       ] = await Promise.all([
         runQuery("SELECT COUNT(*) as cnt FROM cultural_events"),
         runQuery("SELECT COUNT(*) as cnt FROM festival_celebrations"),
@@ -80,6 +83,7 @@ export async function getStats(): Promise<SocietyStats> {
         runQuery("SELECT tower, status FROM community_issues"),
         runQuery("SELECT assigned_to, entity_type, status FROM ado_tasks"),
         runQuery("SELECT COUNT(*) as cnt FROM team_members"),
+        runQuery("SELECT COUNT(*) as cnt FROM vendor_contracts"),
       ]);
 
       const openIssues = issues.filter(
@@ -129,6 +133,7 @@ export async function getStats(): Promise<SocietyStats> {
         active_ado_tasks: activeAdo.length,
         resolved_ado_tasks: resolvedAdo.length,
         team_members_count: parseInt(teamCount[0]?.cnt || "0"),
+        vendors_count: parseInt(vendorsCount[0]?.cnt || "0"),
         tower_issue_counts: towerCounts,
         society_name: "Jaitra Residents Welfare Association",
         total_towers: 6,
@@ -1228,4 +1233,116 @@ export async function updateUserRole(id: number, role: UserRole): Promise<AppUse
 export async function deleteUser(id: number): Promise<void> {
   await runQuery("DELETE FROM app_users WHERE id = $1", [id]);
 }
+
+// ----------------- VENDOR CONTRACTS & AMENITIES MANAGEMENT -----------------
+export async function getVendorContracts(
+  category?: string,
+  functionalStatus?: string,
+  verificationStatus?: string
+): Promise<VendorContract[]> {
+  try {
+    let query = "SELECT * FROM vendor_contracts";
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let i = 1;
+
+    if (category && category !== "All") {
+      conditions.push(`category ILIKE $${i++}`);
+      params.push(`%${category}%`);
+    }
+    if (functionalStatus && functionalStatus !== "All") {
+      conditions.push(`functional_status = $${i++}`);
+      params.push(functionalStatus);
+    }
+    if (verificationStatus && verificationStatus !== "All") {
+      conditions.push(`verification_status = $${i++}`);
+      params.push(verificationStatus);
+    }
+
+    if (conditions.length > 0) {
+      query += " WHERE " + conditions.join(" AND ");
+    }
+    query += " ORDER BY id ASC";
+
+    return await runQuery(query, params);
+  } catch (err) {
+    console.error("getVendorContracts DB error:", err);
+    return [];
+  }
+}
+
+export async function getVendorContract(id: number): Promise<VendorContract | null> {
+  const rows = await runQuery("SELECT * FROM vendor_contracts WHERE id = $1", [id]);
+  return rows[0] || null;
+}
+
+export async function createVendorContract(data: VendorContractCreate): Promise<VendorContract> {
+  const res = await runQuery(
+    `INSERT INTO vendor_contracts (
+      vendor_name, category, service_type, contact_person, contact_phone, contact_email,
+      contract_start_date, contract_end_date, contract_value, functional_status, verification_status,
+      rating, feedback_summary, scope_of_work, contract_doc_url, certificate_url, bidding_notes
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+    RETURNING *`,
+    [
+      data.vendor_name,
+      data.category,
+      data.service_type,
+      data.contact_person || "",
+      data.contact_phone || "",
+      data.contact_email || "",
+      data.contract_start_date || null,
+      data.contract_end_date || null,
+      data.contract_value || "₹ 0",
+      data.functional_status || "Operational",
+      data.verification_status || "Verified & Compliant",
+      data.rating || 4.5,
+      data.feedback_summary || "",
+      data.scope_of_work || "",
+      data.contract_doc_url || "",
+      data.certificate_url || "",
+      data.bidding_notes || "",
+    ]
+  );
+  return res[0];
+}
+
+export async function updateVendorContract(
+  id: number,
+  data: Partial<VendorContractCreate>
+): Promise<VendorContract> {
+  const fields: string[] = [];
+  const values: any[] = [];
+  let i = 1;
+
+  if (data.vendor_name !== undefined) { fields.push(`vendor_name = $${i++}`); values.push(data.vendor_name); }
+  if (data.category !== undefined) { fields.push(`category = $${i++}`); values.push(data.category); }
+  if (data.service_type !== undefined) { fields.push(`service_type = $${i++}`); values.push(data.service_type); }
+  if (data.contact_person !== undefined) { fields.push(`contact_person = $${i++}`); values.push(data.contact_person); }
+  if (data.contact_phone !== undefined) { fields.push(`contact_phone = $${i++}`); values.push(data.contact_phone); }
+  if (data.contact_email !== undefined) { fields.push(`contact_email = $${i++}`); values.push(data.contact_email); }
+  if (data.contract_start_date !== undefined) { fields.push(`contract_start_date = $${i++}`); values.push(data.contract_start_date || null); }
+  if (data.contract_end_date !== undefined) { fields.push(`contract_end_date = $${i++}`); values.push(data.contract_end_date || null); }
+  if (data.contract_value !== undefined) { fields.push(`contract_value = $${i++}`); values.push(data.contract_value); }
+  if (data.functional_status !== undefined) { fields.push(`functional_status = $${i++}`); values.push(data.functional_status); }
+  if (data.verification_status !== undefined) { fields.push(`verification_status = $${i++}`); values.push(data.verification_status); }
+  if (data.rating !== undefined) { fields.push(`rating = $${i++}`); values.push(data.rating); }
+  if (data.feedback_summary !== undefined) { fields.push(`feedback_summary = $${i++}`); values.push(data.feedback_summary); }
+  if (data.scope_of_work !== undefined) { fields.push(`scope_of_work = $${i++}`); values.push(data.scope_of_work); }
+  if (data.contract_doc_url !== undefined) { fields.push(`contract_doc_url = $${i++}`); values.push(data.contract_doc_url); }
+  if (data.certificate_url !== undefined) { fields.push(`certificate_url = $${i++}`); values.push(data.certificate_url); }
+  if (data.bidding_notes !== undefined) { fields.push(`bidding_notes = $${i++}`); values.push(data.bidding_notes); }
+
+  values.push(id);
+  const res = await runQuery(
+    `UPDATE vendor_contracts SET ${fields.join(", ")} WHERE id = $${i} RETURNING *`,
+    values
+  );
+  return res[0];
+}
+
+export async function deleteVendorContract(id: number): Promise<void> {
+  await runQuery("DELETE FROM vendor_contracts WHERE id = $1", [id]);
+}
+
 

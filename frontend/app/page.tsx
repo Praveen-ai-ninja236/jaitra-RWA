@@ -10,6 +10,7 @@ import GeneralBodyMeetingsTab from "../components/GeneralBodyMeetingsTab";
 import IssuesTrackerTab from "../components/IssuesTrackerTab";
 import ADOBorderPendingsTab from "../components/ADOBorderPendingsTab";
 import TeamListTab from "../components/TeamListTab";
+import VendorManagementTab from "../components/VendorManagementTab";
 import AuditReportModal from "../components/AuditReportModal";
 import {
   CulturalEvent,
@@ -33,6 +34,8 @@ import {
   SocietyStats,
   AuditTransaction,
   AppUser,
+  VendorContract,
+  VendorContractCreate,
 } from "../lib/types";
 import * as api from "../lib/api";
 import {
@@ -62,6 +65,7 @@ export default function JaitraPortal() {
   const [issues, setIssues] = useState<CommunityIssue[]>([]);
   const [adoTasks, setAdoTasks] = useState<ADOTask[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [vendors, setVendors] = useState<VendorContract[]>([]);
 
   // User & Auth State (Defaults to null -> strict View Only for unauthenticated visitors)
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
@@ -90,7 +94,7 @@ export default function JaitraPortal() {
       }
 
       const hash = window.location.hash.replace("#", "");
-      if (["culture-events", "festivals", "gbm", "issues", "ado-board", "team"].includes(hash)) {
+      if (["culture-events", "festivals", "gbm", "issues", "ado-board", "team", "vendor-management"].includes(hash)) {
         setActiveTab(hash);
       }
     }
@@ -114,6 +118,7 @@ export default function JaitraPortal() {
         issuesData,
         tasksData,
         teamData,
+        vendorsData,
         auditData,
       ] = await Promise.all([
         api.getStats().catch(() => null),
@@ -123,6 +128,7 @@ export default function JaitraPortal() {
         api.getIssues().catch(() => []),
         api.getADOTasks().catch(() => []),
         api.getTeam().catch(() => []),
+        api.getVendorContracts().catch(() => []),
         api.getAuditTransactions().catch(() => []),
       ]);
 
@@ -133,6 +139,7 @@ export default function JaitraPortal() {
       setIssues(issuesData);
       setAdoTasks(tasksData);
       setTeamMembers(teamData);
+      setVendors(vendorsData);
       setAuditTransactions(auditData);
       setIsBackendConnected(true);
     } catch (err) {
@@ -537,6 +544,40 @@ export default function JaitraPortal() {
     }
   };
 
+  // 7. Vendor Management Handlers
+  const handleAddVendor = async (vendorData: VendorContractCreate) => {
+    try {
+      const newV = await api.createVendorContract(vendorData);
+      setVendors([...vendors, newV]);
+      showToast(`Vendor contract for "${newV.vendor_name}" added to database!`);
+      fetchAllData();
+    } catch (err) {
+      showToast("Failed to save vendor contract: " + (err as Error).message, "error");
+    }
+  };
+
+  const handleUpdateVendor = async (id: number, vendorData: Partial<VendorContractCreate>) => {
+    try {
+      const updated = await api.updateVendorContract(id, vendorData);
+      setVendors(vendors.map((v) => (v.id === id ? updated : v)));
+      showToast(`Contract for "${updated.vendor_name}" updated in DB!`);
+      fetchAllData();
+    } catch (err) {
+      showToast("Failed to update vendor contract: " + (err as Error).message, "error");
+    }
+  };
+
+  const handleDeleteVendor = async (id: number) => {
+    try {
+      await api.deleteVendorContract(id);
+      setVendors(vendors.filter((v) => v.id !== id));
+      showToast("Vendor contract removed from database.");
+      fetchAllData();
+    } catch (err) {
+      showToast("Failed to delete vendor contract: " + (err as Error).message, "error");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-sky-500 selection:text-white">
       {/* Top Navbar */}
@@ -579,6 +620,7 @@ export default function JaitraPortal() {
           issues: issues.filter((i) => i.status !== "Resolved" && i.status !== "Closed").length,
           adoTasks: adoTasks.filter((t) => t.status !== "Closed").length,
           team: teamMembers.length,
+          vendors: vendors.length,
         }}
       />
 
@@ -663,6 +705,17 @@ export default function JaitraPortal() {
             onAddMember={handleAddTeamMember}
             onUpdateMember={handleUpdateTeamMember}
             onDeleteMember={handleDeleteTeamMember}
+            isLoading={isLoading}
+            userRole={currentUser?.role || "User"}
+          />
+        )}
+
+        {activeTab === "vendor-management" && (
+          <VendorManagementTab
+            vendors={vendors}
+            onAddVendor={handleAddVendor}
+            onUpdateVendor={handleUpdateVendor}
+            onDeleteVendor={handleDeleteVendor}
             isLoading={isLoading}
             userRole={currentUser?.role || "User"}
           />

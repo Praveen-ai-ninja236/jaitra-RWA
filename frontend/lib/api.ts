@@ -30,6 +30,8 @@ import {
   AppUser,
   AppUserRegister,
   UserRole,
+  VendorContract,
+  VendorContractCreate,
 } from "./types";
 
 const API_BASE_URL =
@@ -481,4 +483,46 @@ export async function deleteUser(id: number): Promise<{ message: string }> {
     method: "DELETE",
   });
 }
+
+// ----------------- 9. VENDOR & CONTRACT MANAGEMENT -----------------
+export async function getVendorContracts(
+  category?: string,
+  functionalStatus?: string,
+  verificationStatus?: string
+): Promise<VendorContract[]> {
+  const params = new URLSearchParams();
+  if (category && category !== "All") params.append("category", category);
+  if (functionalStatus && functionalStatus !== "All") params.append("functional_status", functionalStatus);
+  if (verificationStatus && verificationStatus !== "All") params.append("verification_status", verificationStatus);
+  const qs = params.toString() ? `?${params.toString()}` : "";
+  return fetchJSON<VendorContract[]>(`/api/vendors${qs}`);
+}
+
+export async function getVendorContract(id: number): Promise<VendorContract> {
+  return fetchJSON<VendorContract>(`/api/vendors/${id}`);
+}
+
+export async function createVendorContract(data: VendorContractCreate): Promise<VendorContract> {
+  return fetchJSON<VendorContract>("/api/vendors", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateVendorContract(
+  id: number,
+  data: Partial<VendorContractCreate>
+): Promise<VendorContract> {
+  return fetchJSON<VendorContract>(`/api/vendors/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteVendorContract(id: number): Promise<{ message: string }> {
+  return fetchJSON<{ message: string }>(`/api/vendors/${id}`, {
+    method: "DELETE",
+  });
+}
+
 

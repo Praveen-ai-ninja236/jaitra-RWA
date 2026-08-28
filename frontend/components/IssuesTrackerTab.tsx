@@ -14,19 +14,19 @@ import {
   User,
   Wrench,
   Trash2,
-  Check,
   Building,
   Tag,
   ShieldAlert,
   Layers,
-  ChevronDown,
-  ChevronUp,
   LayoutGrid,
   List,
-  Edit3,
   ArrowUpDown,
   Paperclip,
   Edit,
+  ExternalLink,
+  ChevronRight,
+  Eye,
+  Check,
 } from "lucide-react";
 import Modal from "./Modal";
 import DynamicSelect from "./DynamicSelect";
@@ -55,12 +55,13 @@ export default function IssuesTrackerTab({
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [selectedPriority, setSelectedPriority] = useState("All");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [viewMode, setViewMode] = useState<"tower-containers" | "all-rows">("tower-containers");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingIssue, setEditingIssue] = useState<CommunityIssue | null>(null);
-  const [collapsedTowers, setCollapsedTowers] = useState<Record<string, boolean>>({});
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
-  // Sort State for All Rows View
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [activeIssueDetail, setActiveIssueDetail] = useState<CommunityIssue | null>(null);
+  const [editingIssue, setEditingIssue] = useState<CommunityIssue | null>(null);
+
+  // Sort State
   const [sortField, setSortField] = useState<"created_at" | "priority" | "status" | "tower">("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
@@ -141,12 +142,10 @@ export default function IssuesTrackerTab({
       });
   }, [issues, searchTerm, selectedTowerFilter, selectedStatus, selectedPriority, selectedCategory, sortField, sortOrder]);
 
-  const toggleTowerCollapse = (towerName: string) => {
-    setCollapsedTowers({
-      ...collapsedTowers,
-      [towerName]: !collapsedTowers[towerName],
-    });
-  };
+  const currentDetailIssue = useMemo(() => {
+    if (!activeIssueDetail) return null;
+    return issues.find((i) => i.id === activeIssueDetail.id) || activeIssueDetail;
+  }, [issues, activeIssueDetail]);
 
   const handleCreateIssue = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -212,14 +211,14 @@ export default function IssuesTrackerTab({
   };
 
   const getTowerColor = (towerName: string) => {
-    if (towerName === "Tower A") return "border-sky-500/40 bg-sky-950/20 text-sky-400";
-    if (towerName === "Tower B") return "border-indigo-500/40 bg-indigo-950/20 text-indigo-400";
-    if (towerName === "Tower C") return "border-purple-500/40 bg-purple-950/20 text-purple-400";
-    if (towerName === "Tower D") return "border-emerald-500/40 bg-emerald-950/20 text-emerald-400";
-    if (towerName === "Tower E") return "border-amber-500/40 bg-amber-950/20 text-amber-400";
-    if (towerName === "Tower F") return "border-rose-500/40 bg-rose-950/20 text-rose-400";
-    if (towerName === "Clubhouse") return "border-cyan-500/40 bg-cyan-950/20 text-cyan-400";
-    return "border-slate-500/40 bg-slate-800/40 text-slate-300";
+    if (towerName === "Tower A") return "bg-sky-950/80 text-sky-300 border-sky-700/60";
+    if (towerName === "Tower B") return "bg-indigo-950/80 text-indigo-300 border-indigo-700/60";
+    if (towerName === "Tower C") return "bg-purple-950/80 text-purple-300 border-purple-700/60";
+    if (towerName === "Tower D") return "bg-emerald-950/80 text-emerald-300 border-emerald-700/60";
+    if (towerName === "Tower E") return "bg-amber-950/80 text-amber-300 border-amber-700/60";
+    if (towerName === "Tower F") return "bg-rose-950/80 text-rose-300 border-rose-700/60";
+    if (towerName === "Clubhouse") return "bg-cyan-950/80 text-cyan-300 border-cyan-700/60";
+    return "bg-slate-800 text-slate-300 border-slate-700";
   };
 
   return (
@@ -230,39 +229,39 @@ export default function IssuesTrackerTab({
           <div className="flex items-center gap-2.5">
             <div className="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]" />
             <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
-              4. Community Issues Tracker (Towers A - F, Clubhouse &amp; Common Area)
+              4. Community Issues Tracker
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Grouped by 6 Towers (A, B, C, D, E, F) and Common amenities with row-wise ticket tracking.
+            Logged resident complaints, maintenance tickets, and resolutions across Towers A-F &amp; common spaces.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* View Mode Toggle */}
+          {/* View Mode Switcher */}
           <div className="inline-flex bg-slate-950 p-1 rounded-xl border border-slate-800">
             <button
-              onClick={() => setViewMode("tower-containers")}
+              onClick={() => setViewMode("cards")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                viewMode === "tower-containers"
+                viewMode === "cards"
                   ? "bg-slate-800 text-white shadow-md border border-slate-700"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
-              <span>Tower Containers</span>
+              <span>Cards</span>
             </button>
 
             <button
-              onClick={() => setViewMode("all-rows")}
+              onClick={() => setViewMode("table")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                viewMode === "all-rows"
+                viewMode === "table"
                   ? "bg-slate-800 text-white shadow-md border border-slate-700"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
               <List className="w-3.5 h-3.5" />
-              <span>All Tickets</span>
+              <span>Table</span>
             </button>
           </div>
 
@@ -286,275 +285,164 @@ export default function IssuesTrackerTab({
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search ticket # (ISS-TWA-101), flat no, issue title..."
+            placeholder="Search ticket code, flat number, title, technician..."
             className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-500 bg-slate-800/80 text-white placeholder-slate-400"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Tower Filter */}
-          <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-xs">
-            <Building className="w-3.5 h-3.5 text-sky-400" />
-            <span className="text-slate-400 font-medium">Tower:</span>
-            <select
-              value={selectedTowerFilter}
-              onChange={(e) => setSelectedTowerFilter(e.target.value)}
-              className="bg-transparent font-bold text-white focus:outline-none cursor-pointer"
-            >
-              <option value="All">All Towers (A - F)</option>
-              {defaultTowers.map((t) => (
-                <option key={t} value={t} className="bg-slate-900 text-white">
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={selectedTowerFilter}
+            onChange={(e) => setSelectedTowerFilter(e.target.value)}
+            className="bg-slate-800 text-white border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none"
+          >
+            <option value="All">All Towers</option>
+            {defaultTowers.map((t) => (
+              <option key={t} value={t} className="bg-slate-900 text-white">
+                {t}
+              </option>
+            ))}
+          </select>
 
           {/* Priority */}
-          <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-xs">
-            <span className="text-slate-400 font-medium">Priority:</span>
-            <select
-              value={selectedPriority}
-              onChange={(e) => setSelectedPriority(e.target.value)}
-              className="bg-transparent font-bold text-white focus:outline-none cursor-pointer"
-            >
-              <option value="All">All</option>
-              {defaultPriorities.map((p) => (
-                <option key={p} value={p} className="bg-slate-900 text-white">
-                  {p}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={selectedPriority}
+            onChange={(e) => setSelectedPriority(e.target.value)}
+            className="bg-slate-800 text-white border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none"
+          >
+            <option value="All">All Priorities</option>
+            {defaultPriorities.map((p) => (
+              <option key={p} value={p} className="bg-slate-900 text-white">
+                {p}
+              </option>
+            ))}
+          </select>
 
           {/* Status */}
-          <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-xs">
-            <span className="text-slate-400 font-medium">Status:</span>
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="bg-transparent font-bold text-white focus:outline-none cursor-pointer"
-            >
-              <option value="All">All Statuses</option>
-              {defaultStatuses.map((s) => (
-                <option key={s} value={s} className="bg-slate-900 text-white">
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="bg-slate-800 text-white border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none"
+          >
+            <option value="All">All Statuses</option>
+            {defaultStatuses.map((s) => (
+              <option key={s} value={s} className="bg-slate-900 text-white">
+                {s}
+              </option>
+            ))}
+          </select>
+
+          {/* Category */}
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="bg-slate-800 text-white border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none"
+          >
+            <option value="All">All Categories</option>
+            {defaultCategories.map((c) => (
+              <option key={c} value={c} className="bg-slate-900 text-white">
+                {c}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* VIEW MODE 1: TOWER LEVEL CONTAINERS WITH ROW-WISE TICKETS */}
-      {viewMode === "tower-containers" && (
-        <div className="space-y-5">
-          {defaultTowers
-            .filter((towerName) => selectedTowerFilter === "All" || selectedTowerFilter === towerName)
-            .map((towerName) => {
-              const towerIssues = filteredIssues.filter((i) => i.tower === towerName);
-              const openCount = towerIssues.filter(
-                (i) => i.status !== "Resolved" && i.status !== "Closed"
-              ).length;
-              const isCollapsed = collapsedTowers[towerName];
+      {/* VIEW MODE 1: MULTI-CARDS GRID (COMPACT & SLEEK) */}
+      {viewMode === "cards" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredIssues.length === 0 ? (
+            <div className="col-span-full bg-slate-900/60 rounded-2xl p-12 text-center border border-slate-800 shadow-md">
+              <ShieldAlert className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+              <h3 className="text-base font-bold text-slate-300">No maintenance tickets found</h3>
+              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                No tickets match your search or filter settings.
+              </p>
+            </div>
+          ) : (
+            filteredIssues.map((issue) => {
+              const isResolved = issue.status === "Resolved" || issue.status === "Closed";
 
               return (
                 <div
-                  key={towerName}
-                  className="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-lg overflow-hidden transition-all"
+                  key={issue.id}
+                  onClick={() => setActiveIssueDetail(issue)}
+                  className={`bg-slate-900/90 rounded-2xl p-4 border border-slate-800 hover:border-rose-500/50 shadow-md hover:shadow-xl transition-all duration-200 cursor-pointer flex flex-col justify-between group ${
+                    issue.priority === "Critical" ? "border-l-4 border-l-rose-500" : ""
+                  }`}
                 >
-                  {/* Tower Container Header */}
-                  <div
-                    onClick={() => toggleTowerCollapse(towerName)}
-                    className="p-4 sm:p-5 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-950 transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`px-3 py-1 rounded-xl border font-black text-xs uppercase tracking-wider ${getTowerColor(
-                          towerName
-                        )}`}
-                      >
-                        {towerName}
-                      </div>
+                  <div>
+                    {/* Top Row: Code, Tower Badge, Priority */}
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="font-mono text-[11px] font-extrabold text-sky-400 bg-sky-950/90 border border-sky-800/80 px-2 py-0.5 rounded-md">
+                        {issue.issue_code || `ISS-${issue.id}`}
+                      </span>
 
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="text-slate-300 font-bold">
-                          {towerIssues.length} Total Tickets
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
+                            issue.priority === "Critical"
+                              ? "bg-rose-950 text-rose-300 border-rose-600 animate-pulse"
+                              : issue.priority === "High"
+                              ? "bg-amber-950 text-amber-300 border-amber-600"
+                              : "bg-slate-800 text-slate-300 border-slate-700"
+                          }`}
+                        >
+                          {issue.priority}
                         </span>
-                        {openCount > 0 && (
-                          <span className="bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded-full font-extrabold text-[10px]">
-                            {openCount} Open / Active
-                          </span>
-                        )}
-                        {openCount === 0 && towerIssues.length > 0 && (
-                          <span className="bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded-full font-bold text-[10px]">
-                            All Resolved ✓
-                          </span>
-                        )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-400 font-semibold hidden sm:inline">
-                        {isCollapsed ? "Expand Tickets" : "Collapse"}
+                    {/* Title */}
+                    <h4 className="text-xs sm:text-sm font-bold text-white leading-snug line-clamp-2 group-hover:text-rose-300 transition mt-1">
+                      {issue.title}
+                    </h4>
+
+                    {/* Tower & Location */}
+                    <div className="flex items-center gap-1.5 mt-2.5">
+                      <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded border ${getTowerColor(issue.tower)}`}>
+                        {issue.tower}
                       </span>
-                      {isCollapsed ? (
-                        <ChevronDown className="w-4 h-4 text-slate-400" />
-                      ) : (
-                        <ChevronUp className="w-4 h-4 text-slate-400" />
-                      )}
+                      <span className="text-[11px] text-slate-300 font-semibold truncate">
+                        {issue.flat_no ? `Flat ${issue.flat_no}` : issue.flat_or_location}
+                      </span>
+                    </div>
+
+                    {/* Category Tag */}
+                    <div className="mt-2 text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                      <Tag className="w-3 h-3 text-slate-500 shrink-0" />
+                      <span className="truncate">{issue.category}</span>
                     </div>
                   </div>
 
-                  {/* Tower Container Row-Wise Tickets Table */}
-                  {!isCollapsed && (
-                    <div className="overflow-x-auto">
-                      {towerIssues.length === 0 ? (
-                        <div className="p-8 text-center text-slate-500 text-xs italic">
-                          No reported maintenance tickets in {towerName}.
-                        </div>
-                      ) : (
-                        <table className="w-full text-left text-xs">
-                          <thead className="bg-slate-800/80 text-slate-400 uppercase font-bold text-[11px]">
-                            <tr>
-                              <th className="p-3">Ticket #</th>
-                              <th className="p-3">Flat / Location</th>
-                              <th className="p-3">Issue Title &amp; Category</th>
-                              <th className="p-3">Reported By</th>
-                              <th className="p-3">Priority</th>
-                              <th className="p-3">Status</th>
-                              <th className="p-3">Assigned To</th>
-                              <th className="p-3 text-right">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-800 text-slate-300">
-                            {towerIssues.map((issue) => (
-                              <tr
-                                key={issue.id}
-                                className={`hover:bg-slate-800/50 transition ${
-                                  issue.priority === "Critical" ? "bg-rose-950/15" : ""
-                                }`}
-                              >
-                                <td className="p-3 font-mono font-extrabold text-sky-400">
-                                  {issue.issue_code || `ISS-${issue.id}`}
-                                </td>
+                  {/* Card Bottom: Status & Reported By */}
+                  <div className="mt-4 pt-2.5 border-t border-slate-800 flex items-center justify-between text-[11px]">
+                    <span
+                      className={`font-bold px-2 py-0.5 rounded-full text-[10px] border ${
+                        isResolved
+                          ? "bg-emerald-950 text-emerald-300 border-emerald-700/60"
+                          : issue.status === "In Progress"
+                          ? "bg-sky-950 text-sky-300 border-sky-700/60"
+                          : "bg-amber-950 text-amber-300 border-amber-700/60"
+                      }`}
+                    >
+                      {issue.status}
+                    </span>
 
-                                <td className="p-3 font-semibold text-white whitespace-nowrap">
-                                  {issue.flat_no
-                                    ? `${issue.tower} - ${issue.flat_no}`
-                                    : issue.flat_or_location}
-                                </td>
-
-                                <td className="p-3 max-w-xs">
-                                  <p className="font-bold text-white leading-snug">{issue.title}</p>
-                                  <span className="text-[10px] text-slate-400 font-semibold bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700 mt-0.5 inline-block">
-                                    {issue.category}
-                                  </span>
-                                  {issue.attachment_url && (
-                                    <a
-                                      href={issue.attachment_url}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="text-[10px] text-sky-400 hover:underline flex items-center gap-0.5 mt-0.5"
-                                    >
-                                      <Paperclip className="w-3 h-3" /> Attached Photo/Doc
-                                    </a>
-                                  )}
-                                  {issue.resolution_notes && (
-                                    <p className="text-[11px] text-emerald-400 italic mt-0.5">
-                                      ↳ Note: {issue.resolution_notes}
-                                    </p>
-                                  )}
-                                </td>
-
-                                <td className="p-3 text-slate-300 whitespace-nowrap">
-                                  {issue.reported_by}
-                                </td>
-
-                                <td className="p-3 whitespace-nowrap">
-                                  <span
-                                    className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
-                                      issue.priority === "Critical"
-                                        ? "bg-rose-950 text-rose-300 border-rose-600 animate-pulse"
-                                        : issue.priority === "High"
-                                        ? "bg-amber-950 text-amber-300 border-amber-600"
-                                        : "bg-slate-800 text-slate-300 border-slate-700"
-                                    }`}
-                                  >
-                                    {issue.priority}
-                                  </span>
-                                </td>
-
-                                <td className="p-3 whitespace-nowrap">
-                                  <span
-                                    className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
-                                      issue.status === "Resolved" || issue.status === "Closed"
-                                        ? "bg-emerald-950 text-emerald-300 border-emerald-700/60"
-                                        : issue.status === "In Progress"
-                                        ? "bg-sky-950 text-sky-300 border-sky-700/60"
-                                        : "bg-amber-950 text-amber-300 border-amber-700/60"
-                                    }`}
-                                  >
-                                    {issue.status}
-                                  </span>
-                                </td>
-
-                                <td className="p-3 text-slate-300 text-[11px] whitespace-nowrap">
-                                  {issue.assigned_to}
-                                </td>
-
-                                <td className="p-3 text-right whitespace-nowrap">
-                                  {canEdit ? (
-                                    <div className="flex items-center justify-end gap-1.5">
-                                      {issue.status !== "Resolved" && (
-                                        <button
-                                          onClick={() => handleQuickStatusChange(issue, "Resolved")}
-                                          title="Mark Resolved"
-                                          className="text-[10px] font-bold bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-700 px-2 py-1 rounded"
-                                        >
-                                          Resolve
-                                        </button>
-                                      )}
-
-                                      <button
-                                        onClick={() => setEditingIssue(issue)}
-                                        title="Edit Ticket"
-                                        className="p-1 text-slate-400 hover:text-white"
-                                      >
-                                        <Edit className="w-3.5 h-3.5" />
-                                      </button>
-
-                                      <button
-                                        onClick={() => {
-                                          if (confirm(`Delete ticket "${issue.title}"?`)) {
-                                            onDeleteIssue(issue.id);
-                                          }
-                                        }}
-                                        title="Delete Ticket"
-                                        className="p-1 text-slate-500 hover:text-rose-400"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <span className="text-[10px] text-slate-500 font-mono">Logged</span>
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      )}
-                    </div>
-                  )}
+                    <span className="text-[10px] text-slate-400 truncate max-w-[120px]">
+                      By {issue.reported_by}
+                    </span>
+                  </div>
                 </div>
               );
-            })}
+            })
+          )}
         </div>
       )}
 
-      {/* VIEW MODE 2: ALL TICKETS LIST VIEW */}
-      {viewMode === "all-rows" && (
+      {/* VIEW MODE 2: TABLE VIEW */}
+      {viewMode === "table" && (
         <div className="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
@@ -617,7 +505,12 @@ export default function IssuesTrackerTab({
                       <td className="p-3 font-bold text-white">{issue.tower}</td>
                       <td className="p-3">{issue.flat_no || issue.flat_or_location}</td>
                       <td className="p-3 max-w-xs">
-                        <p className="font-bold text-white">{issue.title}</p>
+                        <p
+                          onClick={() => setActiveIssueDetail(issue)}
+                          className="font-bold text-white hover:text-rose-300 cursor-pointer"
+                        >
+                          {issue.title}
+                        </p>
                         <span className="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">
                           {issue.category}
                         </span>
@@ -639,7 +532,7 @@ export default function IssuesTrackerTab({
                       <td className="p-3">
                         <span
                           className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
-                            issue.status === "Resolved"
+                            issue.status === "Resolved" || issue.status === "Closed"
                               ? "bg-emerald-950 text-emerald-300 border-emerald-700"
                               : issue.status === "In Progress"
                               ? "bg-sky-950 text-sky-300 border-sky-700"
@@ -651,30 +544,37 @@ export default function IssuesTrackerTab({
                       </td>
                       <td className="p-3 text-[11px]">{issue.assigned_to}</td>
                       <td className="p-3 text-right">
-                        {canEdit ? (
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => setEditingIssue(issue)}
-                              className="p-1 text-slate-400 hover:text-amber-300"
-                              title="Edit Ticket"
-                            >
-                              <Edit className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => {
-                                if (confirm(`Delete ticket "${issue.title}"?`)) {
-                                onDeleteIssue(issue.id);
-                              }
-                            }}
-                            className="p-1 text-slate-500 hover:text-rose-400"
-                            title="Delete Ticket"
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => setActiveIssueDetail(issue)}
+                            className="p-1 text-slate-400 hover:text-sky-300"
+                            title="View Ticket Details"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Eye className="w-3.5 h-3.5" />
                           </button>
+                          {canEdit && (
+                            <>
+                              <button
+                                onClick={() => setEditingIssue(issue)}
+                                className="p-1 text-slate-400 hover:text-amber-300"
+                                title="Edit Ticket"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Delete ticket "${issue.title}"?`)) {
+                                    onDeleteIssue(issue.id);
+                                  }
+                                }}
+                                className="p-1 text-slate-500 hover:text-rose-400"
+                                title="Delete Ticket"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
                         </div>
-                        ) : (
-                          <span className="text-[10px] text-slate-500 font-mono">Logged</span>
-                        )}
                       </td>
                     </tr>
                   ))
@@ -683,6 +583,148 @@ export default function IssuesTrackerTab({
             </table>
           </div>
         </div>
+      )}
+
+      {/* Interactive Issue Details Modal */}
+      {currentDetailIssue && (
+        <Modal
+          isOpen={Boolean(currentDetailIssue)}
+          onClose={() => setActiveIssueDetail(null)}
+          title={`${currentDetailIssue.issue_code || "ISS"}: ${currentDetailIssue.title}`}
+          subtitle="Community Maintenance Ticket Details & Resolution Progress"
+          maxWidth="lg"
+        >
+          <div className="space-y-4 text-xs">
+            {/* Meta Tags Row */}
+            <div className="flex flex-wrap items-center gap-2 p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+              <span className={`px-2.5 py-0.5 rounded-lg font-bold border text-xs ${getTowerColor(currentDetailIssue.tower)}`}>
+                {currentDetailIssue.tower} {currentDetailIssue.flat_no ? `- Flat ${currentDetailIssue.flat_no}` : ""}
+              </span>
+
+              <span className="px-2 py-0.5 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 font-semibold text-[11px]">
+                {currentDetailIssue.category}
+              </span>
+
+              <span
+                className={`px-2 py-0.5 rounded-full font-bold text-[11px] border ${
+                  currentDetailIssue.status === "Resolved" || currentDetailIssue.status === "Closed"
+                    ? "bg-emerald-950 text-emerald-300 border-emerald-700"
+                    : currentDetailIssue.status === "In Progress"
+                    ? "bg-sky-950 text-sky-300 border-sky-700"
+                    : "bg-amber-950 text-amber-300 border-amber-700"
+                }`}
+              >
+                {currentDetailIssue.status}
+              </span>
+
+              <span
+                className={`ml-auto text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
+                  currentDetailIssue.priority === "Critical"
+                    ? "bg-rose-950 text-rose-300 border-rose-600"
+                    : currentDetailIssue.priority === "High"
+                    ? "bg-amber-950 text-amber-300 border-amber-600"
+                    : "bg-slate-800 text-slate-300 border-slate-700"
+                }`}
+              >
+                {currentDetailIssue.priority} Priority
+              </span>
+            </div>
+
+            {/* Description */}
+            <div className="p-4 bg-slate-800/60 rounded-xl border border-slate-700">
+              <h4 className="font-bold text-white mb-1.5 text-xs">Issue Description</h4>
+              <p className="text-slate-200 leading-relaxed">
+                {currentDetailIssue.description || currentDetailIssue.title}
+              </p>
+            </div>
+
+            {/* Key Metadata Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 bg-slate-800/60 rounded-xl border border-slate-700">
+                <span className="text-slate-400 font-semibold text-[11px]">Reported By</span>
+                <p className="font-bold text-white mt-0.5">{currentDetailIssue.reported_by}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Date: {currentDetailIssue.created_at}</p>
+              </div>
+
+              <div className="p-3 bg-slate-800/60 rounded-xl border border-slate-700">
+                <span className="text-slate-400 font-semibold text-[11px]">Assigned Technician / Desk</span>
+                <p className="font-bold text-white mt-0.5">{currentDetailIssue.assigned_to}</p>
+              </div>
+            </div>
+
+            {/* Attachment Proof if any */}
+            {currentDetailIssue.attachment_url && (
+              <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs">
+                  <Paperclip className="w-4 h-4 text-sky-400" />
+                  <span className="text-slate-200 font-semibold">Attached Photo / Defect Evidence</span>
+                </div>
+                <a
+                  href={currentDetailIssue.attachment_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>View Proof</span>
+                </a>
+              </div>
+            )}
+
+            {/* Resolution Notes */}
+            {currentDetailIssue.resolution_notes && (
+              <div className="p-3.5 bg-emerald-950/40 rounded-xl border border-emerald-800/50">
+                <h4 className="font-bold text-emerald-300 mb-1 text-xs flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Resolution &amp; Inspection Update
+                </h4>
+                <p className="text-emerald-100 leading-relaxed text-xs">
+                  {currentDetailIssue.resolution_notes}
+                </p>
+              </div>
+            )}
+
+            {/* Actions for Admin / Super Admin */}
+            {canEdit && (
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+                {currentDetailIssue.status !== "Resolved" && (
+                  <button
+                    onClick={() => {
+                      handleQuickStatusChange(currentDetailIssue, "Resolved");
+                      setActiveIssueDetail(null);
+                    }}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition"
+                  >
+                    Mark as Resolved
+                  </button>
+                )}
+
+                <button
+                  onClick={() => {
+                    setEditingIssue(currentDetailIssue);
+                    setActiveIssueDetail(null);
+                  }}
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                  <span>Edit Ticket</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (confirm(`Delete ticket "${currentDetailIssue.title}"?`)) {
+                      onDeleteIssue(currentDetailIssue.id);
+                      setActiveIssueDetail(null);
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-red-950 hover:bg-red-900 border border-red-700 text-red-300 rounded-xl text-xs font-bold transition flex items-center gap-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </Modal>
       )}
 
       {/* Edit Issue Modal */}

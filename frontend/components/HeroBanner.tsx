@@ -15,6 +15,7 @@ import {
   TrendingUp,
   Coins,
   FileSpreadsheet,
+  Briefcase,
 } from "lucide-react";
 
 interface HeroBannerProps {
@@ -82,11 +83,19 @@ export default function HeroBanner({ stats, onSelectTab, onOpenAuditReport }: He
               </button>
 
               <button
+                onClick={() => onSelectTab("vendor-management")}
+                className="inline-flex items-center gap-2 bg-teal-600/90 hover:bg-teal-500 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl border border-teal-500/40 backdrop-blur transition shadow-md shadow-teal-600/20"
+              >
+                <Briefcase className="w-4 h-4" />
+                <span>Vendors &amp; AMCs</span>
+              </button>
+
+              <button
                 onClick={() => onSelectTab("issues")}
                 className="inline-flex items-center gap-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl border border-rose-500/40 backdrop-blur transition"
               >
                 <AlertTriangle className="w-4 h-4 text-rose-400" />
-                <span>Tower Issues (A - F)</span>
+                <span>Tower Issues</span>
               </button>
             </div>
           </div>
@@ -163,28 +172,38 @@ export default function HeroBanner({ stats, onSelectTab, onOpenAuditReport }: He
               <p className="text-[11px] text-sky-300/80 mt-0.5 font-medium">Resolutions &amp; Minutes</p>
             </div>
 
-            {/* Stat 5: 6 Towers & Team */}
+            {/* Stat 5: Vendor Contracts */}
+            <div
+              onClick={() => onSelectTab("vendor-management")}
+              className="bg-teal-950/40 hover:bg-teal-950/60 cursor-pointer border border-teal-800/60 hover:border-teal-400/70 rounded-2xl p-4 backdrop-blur-md transition-all duration-200 group shadow-md"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-teal-300 font-semibold uppercase tracking-wider">
+                  Vendors &amp; AMCs
+                </span>
+                <Briefcase className="w-4 h-4 text-teal-400 group-hover:scale-125 transition" />
+              </div>
+              <p className="text-2xl sm:text-3xl font-extrabold text-teal-300 mt-1.5 font-mono">
+                {stats?.vendors_count ?? 6}
+              </p>
+              <p className="text-[11px] text-teal-200/80 mt-0.5 font-medium">EV Hub, Lifts, STP &amp; AMCs</p>
+            </div>
+
+            {/* Stat 6: Committee */}
             <div
               onClick={() => onSelectTab("team")}
-              className="col-span-2 sm:col-span-2 bg-indigo-950/40 hover:bg-indigo-950/60 cursor-pointer border border-indigo-800/60 hover:border-indigo-400/70 rounded-2xl p-4 backdrop-blur-md transition-all duration-200 group shadow-md"
+              className="bg-indigo-950/40 hover:bg-indigo-950/60 cursor-pointer border border-indigo-800/60 hover:border-indigo-400/70 rounded-2xl p-4 backdrop-blur-md transition-all duration-200 group shadow-md"
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs text-indigo-300 font-semibold uppercase tracking-wider">
-                  Towers &amp; Committee
+                  Committee
                 </span>
                 <Users className="w-4 h-4 text-indigo-400 group-hover:scale-125 transition" />
               </div>
-              <div className="flex items-baseline justify-between mt-1.5">
-                <p className="text-2xl sm:text-3xl font-extrabold text-white font-sans">
-                  6 Towers{" "}
-                  <span className="text-xs font-semibold text-indigo-200">
-                    • {stats?.team_members_count ?? 0} Office Bearers
-                  </span>
-                </p>
-                <span className="text-[11px] text-indigo-300 font-bold bg-indigo-900/60 border border-indigo-700 px-2 py-0.5 rounded-full">
-                  Tenure: 2025-2027
-                </span>
-              </div>
+              <p className="text-2xl sm:text-3xl font-extrabold text-white mt-1.5 font-mono">
+                {stats?.team_members_count ?? 10}
+              </p>
+              <p className="text-[11px] text-indigo-200/80 mt-0.5 font-medium">Elected Office Bearers</p>
             </div>
           </div>
         </div>

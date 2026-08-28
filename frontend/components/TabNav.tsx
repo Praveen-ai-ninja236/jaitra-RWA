@@ -7,7 +7,8 @@ import {
   FileText,
   AlertTriangle,
   Kanban,
-  Users
+  Users,
+  Briefcase,
 } from "lucide-react";
 
 export interface TabItem {
@@ -31,6 +32,7 @@ interface TabNavProps {
     issues?: number;
     adoTasks?: number;
     team?: number;
+    vendors?: number;
   };
 }
 
@@ -88,7 +90,7 @@ export default function TabNav({ activeTab, onTabChange, badgeCounts }: TabNavPr
     },
     {
       id: "team",
-      label: "6. Jaitra Team List & Addition",
+      label: "6. Jaitra Team List",
       shortLabel: "Team Directory",
       icon: Users,
       badge: badgeCounts.team,
@@ -96,12 +98,22 @@ export default function TabNav({ activeTab, onTabChange, badgeCounts }: TabNavPr
       activeBorderColor: "from-emerald-600 to-emerald-400",
       activeGlow: "shadow-emerald-500/20",
     },
+    {
+      id: "vendor-management",
+      label: "7. Vendor & AMC Contracts",
+      shortLabel: "Vendors & AMCs",
+      icon: Briefcase,
+      badge: badgeCounts.vendors,
+      badgeColor: "bg-teal-900/80 text-teal-200 border border-teal-700",
+      activeBorderColor: "from-teal-600 to-teal-400",
+      activeGlow: "shadow-teal-500/20",
+    },
   ];
 
   return (
     <div className="bg-slate-900/95 border-b border-slate-800 sticky top-16 z-30 shadow-md backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <nav className="flex space-x-2 sm:space-x-3 overflow-x-auto py-3 scrollbar-none" aria-label="Tabs">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+        <nav className="flex space-x-1.5 sm:space-x-2 overflow-x-auto py-2.5 scrollbar-none" aria-label="Tabs">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -109,7 +121,7 @@ export default function TabNav({ activeTab, onTabChange, badgeCounts }: TabNavPr
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
-                className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition-all duration-200 ${
+                className={`group relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-200 ${
                   isActive
                     ? "bg-slate-800 text-white shadow-lg border border-slate-700 shadow-slate-950/40"
                     : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
@@ -118,12 +130,12 @@ export default function TabNav({ activeTab, onTabChange, badgeCounts }: TabNavPr
                 {/* Active Underline Glow */}
                 {isActive && (
                   <span
-                    className={`absolute bottom-0 left-3 right-3 h-0.5 bg-gradient-to-r ${tab.activeBorderColor} rounded-full shadow-[0_0_8px_rgba(56,189,248,0.6)]`}
+                    className={`absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r ${tab.activeBorderColor} rounded-full shadow-[0_0_8px_rgba(56,189,248,0.6)]`}
                   />
                 )}
 
                 <Icon
-                  className={`w-4 h-4 transition-transform group-hover:scale-110 ${
+                  className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:scale-110 ${
                     isActive ? "text-sky-400" : "text-slate-500"
                   }`}
                 />
@@ -132,7 +144,7 @@ export default function TabNav({ activeTab, onTabChange, badgeCounts }: TabNavPr
 
                 {tab.badge !== undefined && (typeof tab.badge === "number" ? tab.badge > 0 : Boolean(tab.badge)) && (
                   <span
-                    className={`ml-1 px-2 py-0.5 text-[10px] font-mono font-extrabold rounded-full leading-none transition ${
+                    className={`ml-0.5 sm:ml-1 px-1.5 py-0.2 text-[10px] font-mono font-extrabold rounded-full leading-none transition ${
                       isActive
                         ? "bg-sky-500/20 text-sky-300 border border-sky-400/40"
                         : tab.badgeColor || "bg-slate-800 text-slate-300 border border-slate-700"
