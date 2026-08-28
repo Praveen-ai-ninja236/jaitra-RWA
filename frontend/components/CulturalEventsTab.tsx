@@ -9,6 +9,7 @@ import {
   CulturalAgenda,
   CulturalAgendaCreate,
   UserRole,
+  DropdownCategoryMap,
 } from "../lib/types";
 import {
   Calendar,
@@ -52,6 +53,7 @@ interface CulturalEventsTabProps {
   isLoading: boolean;
   userRole?: UserRole;
   isGuest?: boolean;
+  dropdownMap?: DropdownCategoryMap;
 }
 
 export default function CulturalEventsTab({
@@ -68,6 +70,7 @@ export default function CulturalEventsTab({
   isLoading,
   userRole = "Super Admin",
   isGuest = false,
+  dropdownMap = {},
 }: CulturalEventsTabProps) {
   const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
@@ -119,17 +122,10 @@ export default function CulturalEventsTab({
     duration_mins: 30,
   });
 
-  const defaultCategories = [
-    "Sports",
-    "Music & Performing Arts",
-    "Kids Workshop",
-    "Health & Wellness",
-    "Cultural & Arts",
-    "Quiz & Debates",
-  ];
+  const defaultCategories = dropdownMap["cultural_categories"]?.length ? dropdownMap["cultural_categories"] : ["Sports", "Music & Performing Arts", "Kids Workshop", "Health & Wellness", "Cultural & Arts", "Quiz & Debates"];
   const defaultStatuses = ["Upcoming", "Ongoing", "Completed", "Planning"];
-  const defaultTowers = ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F"];
-  const defaultActivityCategories = [
+  const defaultTowers = dropdownMap["towers"]?.length ? dropdownMap["towers"] : ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F"];
+  const defaultActivityCategories = dropdownMap["cultural_activities"]?.length ? dropdownMap["cultural_activities"] : [
     "Badminton Singles",
     "Badminton Doubles",
     "Cricket League",

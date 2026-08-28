@@ -9,6 +9,7 @@ import {
   FestivalExpense,
   FestivalExpenseCreate,
   UserRole,
+  DropdownCategoryMap,
 } from "../lib/types";
 import {
   Sparkles,
@@ -58,6 +59,7 @@ interface FestivalCelebrationsTabProps {
   isLoading: boolean;
   userRole?: UserRole;
   isGuest?: boolean;
+  dropdownMap?: DropdownCategoryMap;
 }
 
 export default function FestivalCelebrationsTab({
@@ -76,6 +78,7 @@ export default function FestivalCelebrationsTab({
   isLoading,
   userRole = "Super Admin",
   isGuest = false,
+  dropdownMap = {},
 }: FestivalCelebrationsTabProps) {
   const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
@@ -146,19 +149,9 @@ export default function FestivalCelebrationsTab({
     transaction_ref: "",
   });
 
-  const defaultTowers = ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F", "Clubhouse"];
-  const defaultPaymentModes = ["UPI", "Cash", "Cheque", "Net Banking", "Card"];
-  const defaultExpenseCategories = [
-    "Decor",
-    "Pooja",
-    "Sound & Light",
-    "Food/Prasadam",
-    "Security",
-    "Priest Dakshina",
-    "Logistics & Stage",
-    "Awards/Gifts",
-    "Printing & Flex",
-  ];
+  const defaultTowers = dropdownMap["towers"]?.length ? dropdownMap["towers"] : ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F", "Clubhouse"];
+  const defaultPaymentModes = dropdownMap["payment_modes"]?.length ? dropdownMap["payment_modes"] : ["UPI", "Cash", "Cheque", "Net Banking", "Card"];
+  const defaultExpenseCategories = dropdownMap["expense_categories"]?.length ? dropdownMap["expense_categories"] : ["Decor", "Pooja", "Sound & Light", "Food/Prasadam", "Security", "Priest Dakshina", "Logistics & Stage", "Awards/Gifts", "Printing & Flex"];
 
   // Filtered Festivals
   const filteredFestivals = useMemo(() => {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { CommunityIssue, CommunityIssueCreate, UserRole } from "../lib/types";
+import { CommunityIssue, CommunityIssueCreate, UserRole, DropdownCategoryMap } from "../lib/types";
 import {
   AlertTriangle,
   AlertCircle,
@@ -39,6 +39,7 @@ interface IssuesTrackerTabProps {
   onDeleteIssue: (id: number) => Promise<void>;
   isLoading: boolean;
   userRole?: UserRole;
+  dropdownMap?: DropdownCategoryMap;
 }
 
 export default function IssuesTrackerTab({
@@ -48,6 +49,7 @@ export default function IssuesTrackerTab({
   onDeleteIssue,
   isLoading,
   userRole = "Super Admin",
+  dropdownMap = {},
 }: IssuesTrackerTabProps) {
   const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
@@ -84,27 +86,9 @@ export default function IssuesTrackerTab({
     attachment_url: "",
   });
 
-  const defaultTowers = [
-    "Tower A",
-    "Tower B",
-    "Tower C",
-    "Tower D",
-    "Tower E",
-    "Tower F",
-    "Clubhouse",
-    "Common Space",
-  ];
+  const defaultTowers = dropdownMap["towers"]?.length ? dropdownMap["towers"] : ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F", "Clubhouse", "Common Space"];
 
-  const defaultCategories = [
-    "Civil & Seepage",
-    "Electrical & Lift",
-    "STP & Water Supply",
-    "Security & Access",
-    "Landscaping & Pest",
-    "Common Amenities",
-    "Plumbing & Sanitation",
-    "Fire Safety",
-  ];
+  const defaultCategories = dropdownMap["issue_categories"]?.length ? dropdownMap["issue_categories"] : ["Civil & Seepage", "Electrical & Lift", "STP & Water Supply", "Security & Access", "Landscaping & Pest", "Common Amenities", "Plumbing & Sanitation", "Fire Safety"];
 
   const defaultPriorities = ["Critical", "High", "Medium", "Low"];
   const defaultStatuses = ["Open", "In Progress", "Under Inspection", "Resolved", "Closed"];

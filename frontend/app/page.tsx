@@ -36,6 +36,7 @@ import {
   AppUser,
   VendorContract,
   VendorContractCreate,
+  DropdownCategoryMap,
 } from "../lib/types";
 import * as api from "../lib/api";
 import {
@@ -65,6 +66,7 @@ export default function JaitraPortal() {
   const [adoTasks, setAdoTasks] = useState<ADOTask[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [vendors, setVendors] = useState<VendorContract[]>([]);
+  const [dropdownMap, setDropdownMap] = useState<DropdownCategoryMap>({});
 
   // User & Auth State (Defaults to null -> strict View Only for unauthenticated visitors)
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
@@ -128,6 +130,7 @@ export default function JaitraPortal() {
         teamData,
         vendorsData,
         auditData,
+        dropdownData,
       ] = await Promise.all([
         api.getStats().catch(() => null),
         api.getCulturalEvents().catch(() => []),
@@ -138,6 +141,7 @@ export default function JaitraPortal() {
         api.getTeam().catch(() => []),
         api.getVendorContracts().catch(() => []),
         api.getAuditTransactions().catch(() => []),
+        api.getDropdownSettingsMap().catch(() => ({})),
       ]);
 
       if (statsData) setStats(statsData);
@@ -149,6 +153,7 @@ export default function JaitraPortal() {
       setTeamMembers(teamData);
       setVendors(vendorsData);
       setAuditTransactions(auditData);
+      setDropdownMap(dropdownData);
       setIsBackendConnected(true);
     } catch (err) {
       console.warn("Backend fetch failed, running with local state", err);
@@ -659,6 +664,7 @@ export default function JaitraPortal() {
             isLoading={isLoading}
             userRole={currentUser?.role || "User"}
             isGuest={!currentUser}
+            dropdownMap={dropdownMap}
           />
         )}
 
@@ -679,6 +685,7 @@ export default function JaitraPortal() {
             isLoading={isLoading}
             userRole={currentUser?.role || "User"}
             isGuest={!currentUser}
+            dropdownMap={dropdownMap}
           />
         )}
 
@@ -691,6 +698,7 @@ export default function JaitraPortal() {
             isLoading={isLoading}
             userRole={currentUser?.role || "User"}
             isGuest={!currentUser}
+            dropdownMap={dropdownMap}
           />
         )}
 
@@ -702,6 +710,7 @@ export default function JaitraPortal() {
             onDeleteIssue={handleDeleteIssue}
             isLoading={isLoading}
             userRole={currentUser?.role || "User"}
+            dropdownMap={dropdownMap}
           />
         )}
 
@@ -717,6 +726,7 @@ export default function JaitraPortal() {
             onDeleteAttachment={handleDeleteADOAttachment}
             isLoading={isLoading}
             userRole={currentUser?.role || "User"}
+            dropdownMap={dropdownMap}
           />
         )}
 
@@ -728,6 +738,7 @@ export default function JaitraPortal() {
             onDeleteMember={handleDeleteTeamMember}
             isLoading={isLoading}
             userRole={currentUser?.role || "User"}
+            dropdownMap={dropdownMap}
           />
         )}
 
@@ -739,6 +750,7 @@ export default function JaitraPortal() {
             onDeleteVendor={handleDeleteVendor}
             isLoading={isLoading}
             userRole={currentUser?.role || "User"}
+            dropdownMap={dropdownMap}
           />
         )}
       </main>

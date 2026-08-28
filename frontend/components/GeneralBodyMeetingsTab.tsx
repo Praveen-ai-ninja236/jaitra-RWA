@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { GeneralBodyMeeting, GeneralBodyMeetingCreate, UserRole } from "../lib/types";
+import { GeneralBodyMeeting, GeneralBodyMeetingCreate, UserRole, DropdownCategoryMap } from "../lib/types";
 import {
   FileText,
   Calendar,
@@ -35,6 +35,7 @@ interface GeneralBodyMeetingsTabProps {
   isLoading: boolean;
   userRole?: UserRole;
   isGuest?: boolean;
+  dropdownMap?: DropdownCategoryMap;
 }
 
 export default function GeneralBodyMeetingsTab({
@@ -45,6 +46,7 @@ export default function GeneralBodyMeetingsTab({
   isLoading,
   userRole = "Super Admin",
   isGuest = false,
+  dropdownMap = {},
 }: GeneralBodyMeetingsTabProps) {
   const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
@@ -69,13 +71,8 @@ export default function GeneralBodyMeetingsTab({
     doc_link: "",
   });
 
-  const defaultMeetingTypes = ["AGM", "EGM", "Quarterly GBM", "Special Committee", "MC Monthly"];
-  const defaultVenues = [
-    "Clubhouse Grand Banquet Hall",
-    "Clubhouse Studio 1",
-    "Amphitheatre",
-    "Zoom Hybrid Online",
-  ];
+  const defaultMeetingTypes = dropdownMap["meeting_types"]?.length ? dropdownMap["meeting_types"] : ["AGM", "EGM", "Quarterly GBM", "Special Committee", "MC Monthly"];
+  const defaultVenues = dropdownMap["meeting_venues"]?.length ? dropdownMap["meeting_venues"] : ["Clubhouse Grand Banquet Hall", "Clubhouse Studio 1", "Amphitheatre", "Zoom Hybrid Online"];
   const defaultQuorumStatuses = ["Quorum Met (Full)", "Quorum Met (Partial)", "Quorum Pending", "Special Session"];
 
   const filteredMeetings = useMemo(() => {

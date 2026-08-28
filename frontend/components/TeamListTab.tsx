@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { TeamMember, TeamMemberCreate, UserRole } from "../lib/types";
+import { TeamMember, TeamMemberCreate, UserRole, DropdownCategoryMap } from "../lib/types";
 import {
   Users,
   UserPlus,
@@ -29,6 +29,7 @@ interface TeamListTabProps {
   onDeleteMember: (id: number) => Promise<void>;
   isLoading: boolean;
   userRole?: UserRole;
+  dropdownMap?: DropdownCategoryMap;
 }
 
 export default function TeamListTab({
@@ -38,6 +39,7 @@ export default function TeamListTab({
   onDeleteMember,
   isLoading,
   userRole = "Super Admin",
+  dropdownMap = {},
 }: TeamListTabProps) {
   const canEditTeam = userRole === "Super Admin";
   const [searchTerm, setSearchTerm] = useState("");
@@ -60,7 +62,9 @@ export default function TeamListTab({
     status: "Active",
   });
 
-  const defaultTowers = ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F"];
+  const defaultTowers = dropdownMap["towers"]?.length
+    ? dropdownMap["towers"]
+    : ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F"];
 
   const ROLE_SORT_ORDER: string[] = [
     "Chairman",
@@ -84,54 +88,58 @@ export default function TeamListTab({
     "Jaitra Engineer 2",
   ];
 
-  const defaultRoles = [
-    "Chairman",
-    "Vice-chairman",
-    "Vice Chairman",
-    "President",
-    "Vice President",
-    "General Secretary",
-    "Joint Secretary",
-    "Treasurer",
-    "Joint Treasurer",
-    "Director - A",
-    "Director - B",
-    "Director - C",
-    "Director - D",
-    "Director - E",
-    "Director - F",
-    "Jaitra MD",
-    "Jaitra Director 1",
-    "Jaitra Director 2",
-    "Jaitra CRM 1",
-    "Jaitra CRM 2",
-    "Jaitra Engineer 1",
-    "Jaitra Engineer 2",
-    "Cultural Committee Head",
-    "Sports & Amenities Head",
-    "Facility & Maintenance Lead",
-    "Security & IT Lead",
-    "Block Representative (Tower A)",
-    "Block Representative (Tower B)",
-    "Block Representative (Tower C)",
-    "Block Representative (Tower D)",
-    "Block Representative (Tower E)",
-    "Block Representative (Tower F)",
-    "Executive Member",
-  ];
+  const defaultRoles = dropdownMap["team_roles"]?.length
+    ? dropdownMap["team_roles"]
+    : [
+        "Chairman",
+        "Vice-chairman",
+        "Vice Chairman",
+        "President",
+        "Vice President",
+        "General Secretary",
+        "Joint Secretary",
+        "Treasurer",
+        "Joint Treasurer",
+        "Director - A",
+        "Director - B",
+        "Director - C",
+        "Director - D",
+        "Director - E",
+        "Director - F",
+        "Jaitra MD",
+        "Jaitra Director 1",
+        "Jaitra Director 2",
+        "Jaitra CRM 1",
+        "Jaitra CRM 2",
+        "Jaitra Engineer 1",
+        "Jaitra Engineer 2",
+        "Cultural Committee Head",
+        "Sports & Amenities Head",
+        "Facility & Maintenance Lead",
+        "Security & IT Lead",
+        "Block Representative (Tower A)",
+        "Block Representative (Tower B)",
+        "Block Representative (Tower C)",
+        "Block Representative (Tower D)",
+        "Block Representative (Tower E)",
+        "Block Representative (Tower F)",
+        "Executive Member",
+      ];
 
-  const defaultSubCommittees = [
-    "Executive & Governance",
-    "Legal, Compliance & Admin",
-    "Finance, Audit & Corpus",
-    "Security & Estate Management",
-    "Community Relations & PR",
-    "Billing & Vendor Escrow",
-    "Events, Festivals & Arts",
-    "Clubhouse, Gym & Grounds",
-    "Builder Handover & IGS Oversight",
-    "Resident Welfare & Elevators",
-  ];
+  const defaultSubCommittees = dropdownMap["sub_committees"]?.length
+    ? dropdownMap["sub_committees"]
+    : [
+        "Executive & Governance",
+        "Legal, Compliance & Admin",
+        "Finance, Audit & Corpus",
+        "Security & Estate Management",
+        "Community Relations & PR",
+        "Billing & Vendor Escrow",
+        "Events, Festivals & Arts",
+        "Clubhouse, Gym & Grounds",
+        "Builder Handover & IGS Oversight",
+        "Resident Welfare & Elevators",
+      ];
 
   const getRoleSortIndex = (role: string): number => {
     const idx = ROLE_SORT_ORDER.findIndex(

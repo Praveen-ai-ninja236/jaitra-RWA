@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { VendorContract, VendorContractCreate, UserRole } from "../lib/types";
+import { VendorContract, VendorContractCreate, UserRole, DropdownCategoryMap } from "../lib/types";
 import {
   Briefcase,
   Zap,
@@ -46,6 +46,7 @@ interface VendorManagementTabProps {
   onDeleteVendor: (id: number) => Promise<void>;
   isLoading: boolean;
   userRole?: UserRole;
+  dropdownMap?: DropdownCategoryMap;
 }
 
 export default function VendorManagementTab({
@@ -55,6 +56,7 @@ export default function VendorManagementTab({
   onDeleteVendor,
   isLoading,
   userRole = "Super Admin",
+  dropdownMap = {},
 }: VendorManagementTabProps) {
   const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
@@ -93,18 +95,7 @@ export default function VendorManagementTab({
     bidding_notes: "",
   });
 
-  const defaultCategories = [
-    "Amenities & EV Charging",
-    "Lifts & Elevators AMC",
-    "STP & WTP Operations",
-    "Security & Surveillance",
-    "Fire Safety & Compliance",
-    "Solar & Power Infrastructure",
-    "Housekeeping & Facility",
-    "Plumbing & Civil Works",
-    "Gym & Fitness Equipment",
-    "Landscaping & Horticulture",
-  ];
+  const defaultCategories = dropdownMap["ado_categories"]?.length ? dropdownMap["ado_categories"] : ["Amenities & EV Charging", "Lifts & Elevators AMC", "STP & WTP Operations", "Security & Surveillance", "Fire Safety & Compliance", "Solar & Power Infrastructure", "Housekeeping & Facility", "Plumbing & Civil Works", "Gym & Fitness Equipment", "Landscaping & Horticulture"];
 
   const defaultFunctionalStatuses = ["Operational", "Under Maintenance", "Degraded", "Pending Parts"];
   const defaultVerificationStatuses = ["Verified & Compliant", "Pending Inspection", "Non-Compliant"];

@@ -7,6 +7,7 @@ import {
   ADOCommentCreate,
   ADOAttachmentCreate,
   UserRole,
+  DropdownCategoryMap,
 } from "../lib/types";
 import {
   Kanban,
@@ -54,6 +55,7 @@ interface ADOBorderPendingsTabProps {
   onDeleteAttachment: (attachmentId: number) => Promise<void>;
   isLoading: boolean;
   userRole?: UserRole;
+  dropdownMap?: DropdownCategoryMap;
 }
 
 export default function ADOBorderPendingsTab({
@@ -67,6 +69,7 @@ export default function ADOBorderPendingsTab({
   onDeleteAttachment,
   isLoading,
   userRole = "Super Admin",
+  dropdownMap = {},
 }: ADOBorderPendingsTabProps) {
   const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
@@ -129,18 +132,9 @@ export default function ADOBorderPendingsTab({
     { id: "Closed", title: "Closed & Signed-off", headerBorder: "border-indigo-500/40", badgeBg: "bg-indigo-950 text-indigo-300 border border-indigo-700/60", dotColor: "bg-indigo-400" },
   ];
 
-  const defaultCategories = [
-    "Seepage & Waterproofing",
-    "Fire NOC & Compliance",
-    "STP & WTP Operations",
-    "Lifts & Elevators",
-    "Solar & Electrical Grid",
-    "CCTV & Gate Automation",
-    "Clubhouse & Amenities",
-    "Landscaping & Boundary",
-  ];
+  const defaultCategories = dropdownMap["ado_categories"]?.length ? dropdownMap["ado_categories"] : ["Seepage & Waterproofing", "Fire NOC & Compliance", "STP & WTP Operations", "Lifts & Elevators", "Solar & Electrical Grid", "CCTV & Gate Automation", "Clubhouse & Amenities", "Landscaping & Boundary"];
 
-  const defaultEntities = ["Builder", "IGS", "Joint Taskforce", "Association Oversight"];
+  const defaultEntities = dropdownMap["ado_entities"]?.length ? dropdownMap["ado_entities"] : ["Builder", "IGS", "Joint Taskforce", "Association Oversight"];
   const defaultPriorities = ["Critical", "High", "Medium", "Low"];
   const defaultStatuses = ["New", "Active", "Resolved", "Closed"];
 
