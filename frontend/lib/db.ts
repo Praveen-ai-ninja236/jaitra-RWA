@@ -26,6 +26,11 @@ import {
   TeamMemberCreate,
   SocietyStats,
   AuditTransaction,
+  DropdownCategoryMap,
+  DropdownOption,
+  AppUser,
+  AppUserRegister,
+  UserRole,
 } from "./types";
 
 // Neon Database URL - checking all potential environment variables
@@ -1097,3 +1102,130 @@ export async function getAllTransactions(): Promise<AuditTransaction[]> {
 
   return list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
+
+// ----------------- DROPDOWN SETTINGS (SUPER ADMIN ONLY) -----------------
+export async function getAllDropdownSettings(): Promise<DropdownCategoryMap> {
+  try {
+    const rows = await runQuery(
+      "SELECT category_key, option_value FROM dropdown_settings WHERE is_active = TRUE ORDER BY category_key ASC, sort_order ASC, id ASC"
+    );
+    const map: DropdownCategoryMap = {};
+    for (const r of rows) {
+      if (!map[r.category_key]) {
+        map[r.category_key] = [];
+      }
+      map[r.category_key].push(r.option_value);
+    }
+    return map;
+  } catch (err) {
+    console.error("getAllDropdownSettings error:", err);
+    return {};
+  }
+}
+
+export async function getDropdownSettingsList(): Promise<DropdownOption[]> {
+  try {
+    return await runQuery(
+      "SELECT * FROM dropdown_settings ORDER BY category_key ASC, sort_order ASC, id ASC"
+    );
+  } catch (err) {
+    console.error("getDropdownSettingsList error:", err);
+    return [];
+  }
+}
+
+export async function addDropdownOption(
+  categoryKey: string,
+  optionValue: string,
+  sortOrder: number = 0
+): Promise<DropdownOption> {
+  const res = await runQuery(
+    `INSERT INTO dropdown_settings (category_key, option_value, sort_order, is_active)
+     VALUES ($1, $2, $3, TRUE)
+     ON CONFLICT (category_key, option_value) DO UPDATE SET is_active = TRUE
+     RETURNING *`,
+    [categoryKey, optionValue.trim(), sortOrder]
+  );
+  return res[0];
+}
+
+export async function updateDropdownOption(
+  id: number,
+  optionValue?: string,
+  isActive?: boolean,
+  sortOrder?: number
+): Promise<DropdownOption> {
+  const fields: string[] = [];
+  const values: any[] = [];
+  let i = 1;
+
+  if (optionValue !== undefined) { fields.push(`option_value = $${i++}`); values.push(optionValue.trim()); }
+  if (isActive !== undefined) { fields.push(`is_active = $${i++}`); values.push(isActive); }
+  if (sortOrder !== undefined) { fields.push(`sort_order = $${i++}`); values.push(sortOrder); }
+
+  values.push(id);
+  const res = await runQuery(
+    `UPDATE dropdown_settings SET ${fields.join(", ")} WHERE id = $${i} RETURNING *`,
+    values
+  );
+  return res[0];
+}
+
+export async function deleteDropdownOption(id: number): Promise<void> {
+  await runQuery("DELETE FROM dropdown_settings WHERE id = $1", [id]);
+}
+
+// ----------------- USER AUTHENTICATION & RBAC -----------------
+export async function loginUser(email: string, password: string): Promise<AppUser | null> {
+  try {
+    const rows = await runQuery(
+      "SELECT id, name, email, role, tower, flat_no, phone, created_at FROM app_users WHERE LOWER(email) = LOWER($1) AND password = $2",
+      [email.trim(), password.trim()]
+    );
+    return rows[0] || null;
+  } catch (err) {
+    console.error("loginUser DB error:", err);
+    return null;
+  }
+}
+
+export async function registerUser(data: AppUserRegister): Promise<AppUser> {
+  const defaultRole = data.role || "User";
+  const res = await runQuery(
+    `INSERT INTO app_users (name, email, password, role, tower, flat_no, phone)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     RETURNING id, name, email, role, tower, flat_no, phone, created_at`,
+    [
+      data.name.trim(),
+      data.email.trim().toLowerCase(),
+      data.password.trim(),
+      defaultRole,
+      data.tower || "Tower A",
+      data.flat_no || "",
+      data.phone || "",
+    ]
+  );
+  return res[0];
+}
+
+export async function getUsers(): Promise<AppUser[]> {
+  try {
+    return await runQuery("SELECT id, name, email, role, tower, flat_no, phone, created_at FROM app_users ORDER BY id ASC");
+  } catch (err) {
+    console.error("getUsers error:", err);
+    return [];
+  }
+}
+
+export async function updateUserRole(id: number, role: UserRole): Promise<AppUser> {
+  const res = await runQuery(
+    "UPDATE app_users SET role = $1 WHERE id = $2 RETURNING id, name, email, role, tower, flat_no, phone, created_at",
+    [role, id]
+  );
+  return res[0];
+}
+
+export async function deleteUser(id: number): Promise<void> {
+  await runQuery("DELETE FROM app_users WHERE id = $1", [id]);
+}
+

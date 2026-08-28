@@ -8,6 +8,7 @@ import {
   FestivalCollectionCreate,
   FestivalExpense,
   FestivalExpenseCreate,
+  UserRole,
 } from "../lib/types";
 import {
   Sparkles,
@@ -55,6 +56,7 @@ interface FestivalCelebrationsTabProps {
   onDeleteExpense: (expenseId: number) => Promise<void>;
   onOpenAuditReport: () => void;
   isLoading: boolean;
+  userRole?: UserRole;
 }
 
 export default function FestivalCelebrationsTab({
@@ -71,7 +73,9 @@ export default function FestivalCelebrationsTab({
   onDeleteExpense,
   onOpenAuditReport,
   isLoading,
+  userRole = "Super Admin",
 }: FestivalCelebrationsTabProps) {
+  const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
 
@@ -383,13 +387,15 @@ export default function FestivalCelebrationsTab({
           </button>
 
           {/* Add Festival Button */}
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs sm:text-sm font-extrabold px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 transition transform active:scale-95 hover:scale-[1.02]"
-          >
-            <Plus className="w-4 h-4 text-slate-950" />
-            <span>Add Festival</span>
-          </button>
+          {canEdit && (
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs sm:text-sm font-extrabold px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 transition transform active:scale-95 hover:scale-[1.02]"
+            >
+              <Plus className="w-4 h-4 text-slate-950" />
+              <span>Add Festival</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -456,30 +462,32 @@ export default function FestivalCelebrationsTab({
                       <span>{fest.status === "Active" ? "Ongoing Celebration" : fest.status}</span>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingFestival(fest);
-                        }}
-                        title="Edit Festival"
-                        className="text-slate-400 hover:text-amber-300 p-1.5 bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700 transition"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`Are you sure you want to delete "${fest.festival_name}"?`)) {
-                            onDeleteFestival(fest.id);
-                          }
-                        }}
-                        title="Delete Festival"
-                        className="text-slate-400 hover:text-rose-400 p-1.5 bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700 transition"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                    {canEdit && (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingFestival(fest);
+                          }}
+                          title="Edit Festival"
+                          className="text-slate-400 hover:text-amber-300 p-1.5 bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700 transition"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`Are you sure you want to delete "${fest.festival_name}"?`)) {
+                              onDeleteFestival(fest.id);
+                            }
+                          }}
+                          title="Delete Festival"
+                          className="text-slate-400 hover:text-rose-400 p-1.5 bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700 transition"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Title & Description */}

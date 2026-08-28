@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { GeneralBodyMeeting, GeneralBodyMeetingCreate } from "../lib/types";
+import { GeneralBodyMeeting, GeneralBodyMeetingCreate, UserRole } from "../lib/types";
 import {
   FileText,
   Calendar,
@@ -33,6 +33,7 @@ interface GeneralBodyMeetingsTabProps {
   onUpdateMeeting: (id: number, meeting: Partial<GeneralBodyMeetingCreate>) => Promise<void>;
   onDeleteMeeting: (id: number) => Promise<void>;
   isLoading: boolean;
+  userRole?: UserRole;
 }
 
 export default function GeneralBodyMeetingsTab({
@@ -41,7 +42,9 @@ export default function GeneralBodyMeetingsTab({
   onUpdateMeeting,
   onDeleteMeeting,
   isLoading,
+  userRole = "Super Admin",
 }: GeneralBodyMeetingsTabProps) {
+  const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("All");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);

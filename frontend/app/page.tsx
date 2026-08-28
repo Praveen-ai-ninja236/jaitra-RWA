@@ -62,6 +62,17 @@ export default function JaitraPortal() {
   const [adoTasks, setAdoTasks] = useState<ADOTask[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 
+  // User & Auth State (Super Admin, Admin, User)
+  const [currentUser, setCurrentUser] = useState<any>({
+    id: 1,
+    name: "Praveen Kumar",
+    email: "superadmin@jaitra.org",
+    role: "Super Admin",
+    tower: "Tower D",
+    flat_no: "704",
+    phone: "+91 96500 12389",
+  });
+
   // Audit Report State
   const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
   const [auditTransactions, setAuditTransactions] = useState<AuditTransaction[]>([]);
@@ -531,6 +542,15 @@ export default function JaitraPortal() {
         isBackendConnected={isBackendConnected}
         onRefresh={fetchAllData}
         isLoading={isLoading}
+        currentUser={currentUser}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          showToast(`Welcome, ${user.name} (${user.role})!`);
+        }}
+        onLogout={() => {
+          setCurrentUser(null);
+          showToast("Signed out. Switched to View Only (User) mode.");
+        }}
       />
 
       {/* Hero Header Banner with Stats */}
@@ -569,6 +589,7 @@ export default function JaitraPortal() {
             onUpdateAgenda={handleUpdateAgenda}
             onDeleteAgenda={handleDeleteAgenda}
             isLoading={isLoading}
+            userRole={currentUser?.role || "User"}
           />
         )}
 
@@ -587,6 +608,7 @@ export default function JaitraPortal() {
             onDeleteExpense={handleDeleteExpense}
             onOpenAuditReport={handleOpenAuditReport}
             isLoading={isLoading}
+            userRole={currentUser?.role || "User"}
           />
         )}
 
@@ -597,6 +619,7 @@ export default function JaitraPortal() {
             onUpdateMeeting={handleUpdateMeeting}
             onDeleteMeeting={handleDeleteMeeting}
             isLoading={isLoading}
+            userRole={currentUser?.role || "User"}
           />
         )}
 
@@ -607,6 +630,7 @@ export default function JaitraPortal() {
             onUpdateIssue={handleUpdateIssue}
             onDeleteIssue={handleDeleteIssue}
             isLoading={isLoading}
+            userRole={currentUser?.role || "User"}
           />
         )}
 
@@ -621,6 +645,7 @@ export default function JaitraPortal() {
             onAddAttachment={handleAddADOAttachment}
             onDeleteAttachment={handleDeleteADOAttachment}
             isLoading={isLoading}
+            userRole={currentUser?.role || "User"}
           />
         )}
 
@@ -631,6 +656,7 @@ export default function JaitraPortal() {
             onUpdateMember={handleUpdateTeamMember}
             onDeleteMember={handleDeleteTeamMember}
             isLoading={isLoading}
+            userRole={currentUser?.role || "User"}
           />
         )}
       </main>

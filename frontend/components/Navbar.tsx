@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import JaitraLogo from "./JaitraLogo";
-import LoginModal from "./LoginModal";
+import AuthModal from "./AuthModal";
+import SettingsModal from "./SettingsModal";
 import {
   WifiOff,
   RefreshCw,
@@ -10,96 +11,93 @@ import {
   Shield,
   MessageCircle,
   Share2,
+  Settings,
+  Menu,
+  X,
+  Crown,
+  Lock,
+  ChevronDown,
 } from "lucide-react";
+import { AppUser, UserRole } from "../lib/types";
 
 interface NavbarProps {
   isBackendConnected: boolean;
   onRefresh: () => void;
   isLoading: boolean;
+  currentUser: AppUser | null;
+  onLoginSuccess: (user: AppUser) => void;
+  onLogout: () => void;
+  onOpenSettings?: () => void;
 }
 
-export default function Navbar({ isBackendConnected, onRefresh, isLoading }: NavbarProps) {
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{
-    name: string;
-    role: string;
-    email: string;
-    flat: string;
-  } | null>({
-    name: "Vikram Patel",
-    role: "Treasurer",
-    email: "treasurer@jaitra.org",
-    flat: "Tower B - 501",
-  });
+export default function Navbar({
+  isBackendConnected,
+  onRefresh,
+  isLoading,
+  currentUser,
+  onLoginSuccess,
+  onLogout,
+}: NavbarProps) {
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const role = currentUser?.role || "User";
 
   return (
     <>
       <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
-          {/* Logo & Society Title (Towers badge removed as requested) */}
-          <div className="flex items-center gap-3 sm:gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
+          {/* Left: Logo & Society Title */}
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <JaitraLogo variant="dark" />
-            <div className="hidden md:block h-7 w-px bg-slate-800" />
-            <div className="hidden md:block">
-              <span className="text-xs sm:text-sm font-extrabold text-slate-100 tracking-wide">
+            <div className="hidden sm:block h-7 w-px bg-slate-800" />
+            <div className="hidden sm:block truncate">
+              <span className="text-xs sm:text-sm font-extrabold text-slate-100 tracking-wide truncate">
                 JAITRA RESIDENTS WELFARE ASSOCIATION
               </span>
             </div>
           </div>
 
-          {/* Center / Right: Social Media Icons + DB Status + Sync + Login */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* Right: Desktop Actions & Social Icons */}
+          <div className="hidden md:flex items-center gap-2 lg:gap-3">
             {/* Social Media Links */}
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-slate-800/80 rounded-xl border border-slate-700/70">
               <span className="text-[10px] font-bold text-slate-400 mr-1 flex items-center gap-1">
                 <Share2 className="w-3 h-3 text-slate-400" /> Connect:
               </span>
-              {/* WhatsApp */}
               <a
                 href="https://chat.whatsapp.com/jaitra-residents"
                 target="_blank"
                 rel="noreferrer"
-                title="Join Jaitra WhatsApp Community"
+                title="Join WhatsApp Community"
                 className="w-7 h-7 rounded-lg bg-emerald-950/80 hover:bg-emerald-800 text-emerald-400 hover:text-white border border-emerald-700/60 flex items-center justify-center transition"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
               </a>
-              {/* Facebook */}
               <a
                 href="https://facebook.com"
                 target="_blank"
                 rel="noreferrer"
-                title="Jaitra Facebook Group"
+                title="Facebook"
                 className="w-7 h-7 rounded-lg bg-blue-950/80 hover:bg-blue-800 text-blue-400 hover:text-white border border-blue-700/60 flex items-center justify-center transition font-bold text-xs"
               >
                 f
               </a>
-              {/* X / Twitter */}
               <a
                 href="https://x.com"
                 target="_blank"
                 rel="noreferrer"
-                title="Jaitra X / Twitter Updates"
+                title="𝕏 / Twitter"
                 className="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 flex items-center justify-center transition font-bold text-xs"
               >
                 𝕏
               </a>
-              {/* Instagram */}
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noreferrer"
-                title="Jaitra Instagram"
-                className="w-7 h-7 rounded-lg bg-pink-950/80 hover:bg-pink-800 text-pink-400 hover:text-white border border-pink-700/60 flex items-center justify-center transition font-bold text-xs"
-              >
-                📷
-              </a>
-              {/* YouTube */}
               <a
                 href="https://youtube.com"
                 target="_blank"
                 rel="noreferrer"
-                title="Jaitra YouTube Channel"
+                title="YouTube"
                 className="w-7 h-7 rounded-lg bg-red-950/80 hover:bg-red-800 text-red-400 hover:text-white border border-red-700/60 flex items-center justify-center transition font-bold text-xs"
               >
                 ▶
@@ -111,15 +109,15 @@ export default function Navbar({ isBackendConnected, onRefresh, isLoading }: Nav
               onClick={onRefresh}
               disabled={isLoading}
               title="Sync latest live database records"
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-slate-300 bg-slate-800/90 hover:bg-slate-700 hover:text-white border border-slate-700 rounded-xl transition shadow-xs disabled:opacity-50"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-slate-300 bg-slate-800/90 hover:bg-slate-700 hover:text-white border border-slate-700 rounded-xl transition shadow-xs disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-sky-400" : "text-slate-400"}`} />
-              <span className="hidden sm:inline">Sync DB</span>
+              <span>Sync DB</span>
             </button>
 
-            {/* Database Connection Status */}
+            {/* Neon DB Status */}
             <div
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-bold border transition ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border transition ${
                 isBackendConnected
                   ? "bg-emerald-950/70 text-emerald-300 border-emerald-700/60 shadow-[0_0_12px_-3px_rgba(16,185,129,0.4)]"
                   : "bg-amber-950/70 text-amber-300 border-amber-700/60"
@@ -128,8 +126,7 @@ export default function Navbar({ isBackendConnected, onRefresh, isLoading }: Nav
               {isBackendConnected ? (
                 <>
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="hidden md:inline">Neon DB Active</span>
-                  <span className="md:hidden">DB Live</span>
+                  <span>Neon DB</span>
                 </>
               ) : (
                 <>
@@ -139,9 +136,27 @@ export default function Navbar({ isBackendConnected, onRefresh, isLoading }: Nav
               )}
             </div>
 
-            {/* Login / User Profile Button */}
+            {/* Settings Button */}
             <button
-              onClick={() => setIsLoginOpen(true)}
+              onClick={() => setIsSettingsOpen(true)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs border transition shadow-sm ${
+                role === "Super Admin"
+                  ? "bg-amber-950/80 text-amber-300 border-amber-600 hover:bg-amber-900"
+                  : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-800"
+              }`}
+              title={
+                role === "Super Admin"
+                  ? "System Dropdown & Configuration Settings"
+                  : "View System Settings (Super Admin Only to Edit)"
+              }
+            >
+              <Settings className="w-3.5 h-3.5 text-amber-400" />
+              <span>Settings</span>
+            </button>
+
+            {/* Auth / Profile Button */}
+            <button
+              onClick={() => setIsAuthOpen(true)}
               className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-xl font-bold text-xs border border-indigo-500/50 shadow-md shadow-indigo-600/20 transition"
             >
               {currentUser ? (
@@ -149,29 +164,139 @@ export default function Navbar({ isBackendConnected, onRefresh, isLoading }: Nav
                   <div className="w-5 h-5 rounded-full bg-indigo-900 border border-indigo-400 flex items-center justify-center text-[10px] text-indigo-200 font-extrabold">
                     {currentUser.name.charAt(0)}
                   </div>
-                  <span className="hidden sm:inline max-w-[100px] truncate">{currentUser.name}</span>
-                  <span className="hidden lg:inline text-[10px] bg-indigo-950/80 px-1.5 py-0.5 rounded text-indigo-200 border border-indigo-800">
+                  <span className="max-w-[90px] truncate">{currentUser.name}</span>
+                  <span
+                    className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase ${
+                      currentUser.role === "Super Admin"
+                        ? "bg-amber-500 text-slate-950"
+                        : currentUser.role === "Admin"
+                        ? "bg-indigo-950 text-indigo-300 border border-indigo-700"
+                        : "bg-slate-800 text-slate-400"
+                    }`}
+                  >
                     {currentUser.role}
                   </span>
                 </>
               ) : (
                 <>
                   <User className="w-3.5 h-3.5" />
-                  <span>Login</span>
+                  <span>Login / Register</span>
                 </>
               )}
             </button>
           </div>
+
+          {/* Mobile Right Controls: Sync + Settings + Auth + Hamburger */}
+          <div className="flex md:hidden items-center gap-1.5">
+            <button
+              onClick={onRefresh}
+              disabled={isLoading}
+              className="p-2 text-slate-300 bg-slate-800 border border-slate-700 rounded-xl"
+              title="Sync DB"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-sky-400" : ""}`} />
+            </button>
+
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="p-2 text-amber-400 bg-slate-800 border border-slate-700 rounded-xl"
+              title="Settings"
+            >
+              <Settings className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={() => setIsAuthOpen(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold"
+            >
+              {currentUser ? (
+                <div className="w-5 h-5 rounded-full bg-indigo-900 flex items-center justify-center text-[10px] font-extrabold">
+                  {currentUser.name.charAt(0)}
+                </div>
+              ) : (
+                <User className="w-3.5 h-3.5" />
+              )}
+            </button>
+
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 text-slate-400 hover:text-white bg-slate-800 rounded-xl border border-slate-700"
+            >
+              {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Dropdown Drawer */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-slate-900 border-b border-slate-800 p-4 space-y-3 animate-fadeIn">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800 text-xs">
+              <span className="text-slate-400">Database Status:</span>
+              <span className="text-emerald-400 font-bold flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Neon PostgreSQL Live
+              </span>
+            </div>
+
+            {currentUser && (
+              <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex items-center justify-between text-xs">
+                <div>
+                  <p className="font-bold text-white">{currentUser.name}</p>
+                  <p className="text-slate-400 text-[11px]">{currentUser.email}</p>
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-950 text-indigo-300 border border-indigo-700">
+                  {currentUser.role}
+                </span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between gap-2 pt-1">
+              <span className="text-xs text-slate-400">Social Communities:</span>
+              <div className="flex items-center gap-2">
+                <a
+                  href="https://chat.whatsapp.com/jaitra-residents"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-8 h-8 rounded-lg bg-emerald-950 text-emerald-400 border border-emerald-700 flex items-center justify-center"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                </a>
+                <a
+                  href="https://facebook.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-8 h-8 rounded-lg bg-blue-950 text-blue-400 border border-blue-700 flex items-center justify-center font-bold text-xs"
+                >
+                  f
+                </a>
+                <a
+                  href="https://x.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-8 h-8 rounded-lg bg-slate-950 text-slate-300 border border-slate-700 flex items-center justify-center font-bold text-xs"
+                >
+                  𝕏
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
-      {/* Login / Profile Modal */}
-      <LoginModal
-        isOpen={isLoginOpen}
-        onClose={() => setIsLoginOpen(false)}
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
         currentUser={currentUser}
-        onLogin={(user) => setCurrentUser(user)}
-        onLogout={() => setCurrentUser(null)}
+        onLoginSuccess={onLoginSuccess}
+        onLogout={onLogout}
+      />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        userRole={role}
+        onOptionsUpdated={onRefresh}
       />
     </>
   );

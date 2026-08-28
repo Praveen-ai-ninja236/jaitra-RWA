@@ -6,6 +6,7 @@ import {
   ADOTaskCreate,
   ADOCommentCreate,
   ADOAttachmentCreate,
+  UserRole,
 } from "../lib/types";
 import {
   Kanban,
@@ -52,6 +53,7 @@ interface ADOBorderPendingsTabProps {
   onAddAttachment: (taskId: number, attachment: ADOAttachmentCreate) => Promise<void>;
   onDeleteAttachment: (attachmentId: number) => Promise<void>;
   isLoading: boolean;
+  userRole?: UserRole;
 }
 
 export default function ADOBorderPendingsTab({
@@ -64,7 +66,9 @@ export default function ADOBorderPendingsTab({
   onAddAttachment,
   onDeleteAttachment,
   isLoading,
+  userRole = "Super Admin",
 }: ADOBorderPendingsTabProps) {
+  const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEntity, setSelectedEntity] = useState<string>("All");
   const [selectedPriority, setSelectedPriority] = useState("All");

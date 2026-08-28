@@ -8,6 +8,7 @@ import {
   CulturalParticipantCreate,
   CulturalAgenda,
   CulturalAgendaCreate,
+  UserRole,
 } from "../lib/types";
 import {
   Calendar,
@@ -49,6 +50,7 @@ interface CulturalEventsTabProps {
   onUpdateAgenda: (agendaId: number, agenda: Partial<CulturalAgendaCreate>) => Promise<void>;
   onDeleteAgenda: (agendaId: number) => Promise<void>;
   isLoading: boolean;
+  userRole?: UserRole;
 }
 
 export default function CulturalEventsTab({
@@ -63,7 +65,9 @@ export default function CulturalEventsTab({
   onUpdateAgenda,
   onDeleteAgenda,
   isLoading,
+  userRole = "Super Admin",
 }: CulturalEventsTabProps) {
+  const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");

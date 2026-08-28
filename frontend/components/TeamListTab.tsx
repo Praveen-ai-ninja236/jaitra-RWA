@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { TeamMember, TeamMemberCreate } from "../lib/types";
+import { TeamMember, TeamMemberCreate, UserRole } from "../lib/types";
 import {
   Users,
   UserPlus,
@@ -28,6 +28,7 @@ interface TeamListTabProps {
   onUpdateMember: (id: number, member: Partial<TeamMemberCreate>) => Promise<void>;
   onDeleteMember: (id: number) => Promise<void>;
   isLoading: boolean;
+  userRole?: UserRole;
 }
 
 export default function TeamListTab({
@@ -36,7 +37,9 @@ export default function TeamListTab({
   onUpdateMember,
   onDeleteMember,
   isLoading,
+  userRole = "Super Admin",
 }: TeamListTabProps) {
+  const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTower, setSelectedTower] = useState("All");
   const [selectedSubCommittee, setSelectedSubCommittee] = useState("All");

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { CommunityIssue, CommunityIssueCreate } from "../lib/types";
+import { CommunityIssue, CommunityIssueCreate, UserRole } from "../lib/types";
 import {
   AlertTriangle,
   AlertCircle,
@@ -38,6 +38,7 @@ interface IssuesTrackerTabProps {
   onUpdateIssue: (id: number, issue: Partial<CommunityIssueCreate>) => Promise<void>;
   onDeleteIssue: (id: number) => Promise<void>;
   isLoading: boolean;
+  userRole?: UserRole;
 }
 
 export default function IssuesTrackerTab({
@@ -46,7 +47,9 @@ export default function IssuesTrackerTab({
   onUpdateIssue,
   onDeleteIssue,
   isLoading,
+  userRole = "Super Admin",
 }: IssuesTrackerTabProps) {
+  const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTowerFilter, setSelectedTowerFilter] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");

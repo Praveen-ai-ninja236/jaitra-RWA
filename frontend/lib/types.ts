@@ -1,3 +1,38 @@
+export type UserRole = "Super Admin" | "Admin" | "User";
+
+export interface AppUser {
+  id: number;
+  name: string;
+  email: string;
+  role: UserRole;
+  tower?: string;
+  flat_no?: string;
+  phone?: string;
+  created_at?: string;
+}
+
+export interface AppUserRegister {
+  name: string;
+  email: string;
+  password: string;
+  role?: UserRole;
+  tower?: string;
+  flat_no?: string;
+  phone?: string;
+}
+
+export interface DropdownOption {
+  id: number;
+  category_key: string;
+  option_value: string;
+  sort_order: number;
+  is_active: boolean;
+}
+
+export type DropdownOptionCreate = Omit<DropdownOption, "id">;
+
+export type DropdownCategoryMap = Record<string, string[]>;
+
 export interface FestivalCollection {
   id: number;
   festival_id: number;

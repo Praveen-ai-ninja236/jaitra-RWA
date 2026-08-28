@@ -25,6 +25,11 @@ import {
   TeamMemberCreate,
   SocietyStats,
   AuditTransaction,
+  DropdownCategoryMap,
+  DropdownOption,
+  AppUser,
+  AppUserRegister,
+  UserRole,
 } from "./types";
 
 const API_BASE_URL =
@@ -406,3 +411,74 @@ export async function deleteTeamMember(id: number): Promise<{ message: string }>
     method: "DELETE",
   });
 }
+
+// ----------------- 7. SETTINGS & DROPDOWN MANAGER -----------------
+export async function getDropdownSettingsMap(): Promise<DropdownCategoryMap> {
+  return fetchJSON<DropdownCategoryMap>("/api/settings");
+}
+
+export async function getDropdownSettingsList(): Promise<DropdownOption[]> {
+  return fetchJSON<DropdownOption[]>("/api/settings?format=list");
+}
+
+export async function addDropdownOption(
+  categoryKey: string,
+  optionValue: string,
+  sortOrder: number = 0
+): Promise<DropdownOption> {
+  return fetchJSON<DropdownOption>("/api/settings", {
+    method: "POST",
+    body: JSON.stringify({ category_key: categoryKey, option_value: optionValue, sort_order: sortOrder }),
+  });
+}
+
+export async function updateDropdownOption(
+  id: number,
+  optionValue?: string,
+  isActive?: boolean,
+  sortOrder?: number
+): Promise<DropdownOption> {
+  return fetchJSON<DropdownOption>(`/api/settings/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ option_value: optionValue, is_active: isActive, sort_order: sortOrder }),
+  });
+}
+
+export async function deleteDropdownOption(id: number): Promise<{ message: string }> {
+  return fetchJSON<{ message: string }>(`/api/settings/${id}`, {
+    method: "DELETE",
+  });
+}
+
+// ----------------- 8. AUTHENTICATION & RBAC -----------------
+export async function loginUser(email: string, password: string): Promise<{ user: AppUser }> {
+  return fetchJSON<{ user: AppUser }>("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function registerUser(data: AppUserRegister): Promise<{ user: AppUser }> {
+  return fetchJSON<{ user: AppUser }>("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getUsers(): Promise<AppUser[]> {
+  return fetchJSON<AppUser[]>("/api/auth/users");
+}
+
+export async function updateUserRole(id: number, role: UserRole): Promise<AppUser> {
+  return fetchJSON<AppUser>("/api/auth/users", {
+    method: "PUT",
+    body: JSON.stringify({ id, role }),
+  });
+}
+
+export async function deleteUser(id: number): Promise<{ message: string }> {
+  return fetchJSON<{ message: string }>(`/api/auth/users?id=${id}`, {
+    method: "DELETE",
+  });
+}
+
