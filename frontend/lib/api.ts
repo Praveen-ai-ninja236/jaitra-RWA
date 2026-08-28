@@ -23,7 +23,8 @@ import {
   ADOAttachmentCreate,
   TeamMember,
   TeamMemberCreate,
-  SocietyStats
+  SocietyStats,
+  AuditTransaction,
 } from "./types";
 
 const API_BASE_URL =
@@ -55,6 +56,11 @@ export async function getStats(): Promise<SocietyStats> {
   return fetchJSON<SocietyStats>("/api/stats");
 }
 
+// ----------------- AUDIT & TRANSACTIONS -----------------
+export async function getAuditTransactions(): Promise<AuditTransaction[]> {
+  return fetchJSON<AuditTransaction[]>("/api/audit");
+}
+
 // ----------------- 1. CULTURAL EVENTS & PARTICIPANTS / AGENDAS -----------------
 export async function getCulturalEvents(status?: string, category?: string): Promise<CulturalEvent[]> {
   const params = new URLSearchParams();
@@ -75,7 +81,7 @@ export async function createCulturalEvent(data: CulturalEventCreate): Promise<Cu
   });
 }
 
-export async function updateCulturalEvent(id: number, data: CulturalEventCreate): Promise<CulturalEvent> {
+export async function updateCulturalEvent(id: number, data: Partial<CulturalEventCreate>): Promise<CulturalEvent> {
   return fetchJSON<CulturalEvent>(`/api/cultural-events/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
@@ -98,6 +104,16 @@ export async function addCulturalParticipant(
   });
 }
 
+export async function updateCulturalParticipant(
+  participantId: number,
+  data: Partial<CulturalParticipantCreate>
+): Promise<CulturalParticipant> {
+  return fetchJSON<CulturalParticipant>(`/api/cultural-events/participants/${participantId}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function deleteCulturalParticipant(participantId: number): Promise<{ message: string }> {
   return fetchJSON<{ message: string }>(`/api/cultural-events/participants/${participantId}`, {
     method: "DELETE",
@@ -110,6 +126,16 @@ export async function addCulturalAgenda(
 ): Promise<CulturalAgenda> {
   return fetchJSON<CulturalAgenda>(`/api/cultural-events/${eventId}/agendas`, {
     method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateCulturalAgenda(
+  agendaId: number,
+  data: Partial<CulturalAgendaCreate>
+): Promise<CulturalAgenda> {
+  return fetchJSON<CulturalAgenda>(`/api/cultural-events/agendas/${agendaId}`, {
+    method: "PUT",
     body: JSON.stringify(data),
   });
 }
@@ -139,7 +165,7 @@ export async function createFestival(data: FestivalCelebrationCreate): Promise<F
   });
 }
 
-export async function updateFestival(id: number, data: FestivalCelebrationCreate): Promise<FestivalCelebration> {
+export async function updateFestival(id: number, data: Partial<FestivalCelebrationCreate>): Promise<FestivalCelebration> {
   return fetchJSON<FestivalCelebration>(`/api/festivals/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
@@ -162,6 +188,16 @@ export async function addFestivalCollection(
   });
 }
 
+export async function updateFestivalCollection(
+  collectionId: number,
+  data: Partial<FestivalCollectionCreate>
+): Promise<FestivalCollection> {
+  return fetchJSON<FestivalCollection>(`/api/festivals/collections/${collectionId}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function deleteFestivalCollection(collectionId: number): Promise<{ message: string }> {
   return fetchJSON<{ message: string }>(`/api/festivals/collections/${collectionId}`, {
     method: "DELETE",
@@ -174,6 +210,16 @@ export async function addFestivalExpense(
 ): Promise<FestivalExpense> {
   return fetchJSON<FestivalExpense>(`/api/festivals/${festivalId}/expenses`, {
     method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateFestivalExpense(
+  expenseId: number,
+  data: Partial<FestivalExpenseCreate>
+): Promise<FestivalExpense> {
+  return fetchJSON<FestivalExpense>(`/api/festivals/expenses/${expenseId}`, {
+    method: "PUT",
     body: JSON.stringify(data),
   });
 }
@@ -213,7 +259,7 @@ export async function createMeeting(data: GeneralBodyMeetingCreate): Promise<Gen
   });
 }
 
-export async function updateMeeting(id: number, data: GeneralBodyMeetingCreate): Promise<GeneralBodyMeeting> {
+export async function updateMeeting(id: number, data: Partial<GeneralBodyMeetingCreate>): Promise<GeneralBodyMeeting> {
   return fetchJSON<GeneralBodyMeeting>(`/api/meetings/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
@@ -249,7 +295,7 @@ export async function createIssue(data: CommunityIssueCreate): Promise<Community
   });
 }
 
-export async function updateIssue(id: number, data: CommunityIssueCreate): Promise<CommunityIssue> {
+export async function updateIssue(id: number, data: Partial<CommunityIssueCreate>): Promise<CommunityIssue> {
   return fetchJSON<CommunityIssue>(`/api/issues/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
@@ -299,7 +345,7 @@ export async function updateADOTaskStatus(
   });
 }
 
-export async function updateADOTask(id: number, data: ADOTaskCreate): Promise<ADOTask> {
+export async function updateADOTask(id: number, data: Partial<ADOTaskCreate>): Promise<ADOTask> {
   return fetchJSON<ADOTask>(`/api/tasks/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
@@ -348,7 +394,7 @@ export async function addTeamMember(data: TeamMemberCreate): Promise<TeamMember>
   });
 }
 
-export async function updateTeamMember(id: number, data: TeamMemberCreate): Promise<TeamMember> {
+export async function updateTeamMember(id: number, data: Partial<TeamMemberCreate>): Promise<TeamMember> {
   return fetchJSON<TeamMember>(`/api/team/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),

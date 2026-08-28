@@ -13,22 +13,24 @@ import {
   ShieldAlert,
   ArrowRight,
   TrendingUp,
-  Coins
+  Coins,
+  FileSpreadsheet,
 } from "lucide-react";
 
 interface HeroBannerProps {
   stats: SocietyStats | null;
   onSelectTab: (tabId: string) => void;
+  onOpenAuditReport?: () => void;
 }
 
-export default function HeroBanner({ stats, onSelectTab }: HeroBannerProps) {
+export default function HeroBanner({ stats, onSelectTab, onOpenAuditReport }: HeroBannerProps) {
   return (
     <div className="bg-gradient-to-br from-[#03132e] via-[#072454] to-[#0c4a9e] text-white shadow-xl relative overflow-hidden border-b border-sky-900/40">
       {/* Background glowing orbs */}
       <div className="absolute -top-24 -left-24 w-96 h-96 bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/2 -right-24 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:20px_20px]" />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 relative z-10">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
           {/* Main Title & Description */}
@@ -37,13 +39,19 @@ export default function HeroBanner({ stats, onSelectTab }: HeroBannerProps) {
               <Building className="w-3.5 h-3.5 text-sky-400" />
               <span>Gated Community • Towers A, B, C, D, E, F</span>
             </div>
-            
+
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white leading-tight drop-shadow-sm">
               Jaitra Residents Welfare Association
             </h1>
-            
+
             <p className="text-sky-100/90 text-sm sm:text-base mt-2.5 leading-relaxed font-normal">
-              Official governance hub managing <strong className="font-semibold text-white">Cultural Events &amp; Enrolments</strong>, <strong className="font-semibold text-white">Festival Audit &amp; Approvals</strong>, <strong className="font-semibold text-white">GBM Minutes</strong>, <strong className="font-semibold text-white">Tower Issues (A-F)</strong>, and <strong className="font-semibold text-amber-300">ADO Builder Deliverables</strong> with Praneeth KKR &amp; IGS.
+              Official governance hub managing{" "}
+              <strong className="font-semibold text-white">Cultural Events &amp; Enrolments</strong>,{" "}
+              <strong className="font-semibold text-white">Festival Audit &amp; Approvals</strong>,{" "}
+              <strong className="font-semibold text-white">GBM Minutes</strong>,{" "}
+              <strong className="font-semibold text-white">Tower Issues (A-F)</strong>, and{" "}
+              <strong className="font-semibold text-amber-300">ADO Builder Deliverables</strong> with Praneeth
+              KKR &amp; IGS.
             </p>
 
             {/* Quick Action Buttons */}
@@ -53,18 +61,24 @@ export default function HeroBanner({ stats, onSelectTab }: HeroBannerProps) {
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 text-xs sm:text-sm font-extrabold px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 transition transform active:scale-95 hover:scale-[1.02]"
               >
                 <Kanban className="w-4 h-4 text-slate-950" />
-                <span>Open ADO Punchlist Board</span>
+                <span>Open ADO Board</span>
                 <span className="bg-slate-950/20 text-slate-950 px-1.5 py-0.5 rounded text-[11px] font-mono font-black">
                   {stats?.active_ado_tasks ?? 0} Pending
                 </span>
               </button>
 
               <button
-                onClick={() => onSelectTab("festivals")}
-                className="inline-flex items-center gap-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl border border-amber-500/40 backdrop-blur transition"
+                onClick={() => {
+                  if (onOpenAuditReport) {
+                    onOpenAuditReport();
+                  } else {
+                    onSelectTab("festivals");
+                  }
+                }}
+                className="inline-flex items-center gap-2 bg-emerald-600/90 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl border border-emerald-500/40 backdrop-blur transition shadow-md shadow-emerald-600/20"
               >
-                <Coins className="w-4 h-4 text-amber-400" />
-                <span>Audit &amp; Expense Tracker</span>
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>Financial Audit Report</span>
               </button>
 
               <button
@@ -72,7 +86,7 @@ export default function HeroBanner({ stats, onSelectTab }: HeroBannerProps) {
                 className="inline-flex items-center gap-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl border border-rose-500/40 backdrop-blur transition"
               >
                 <AlertTriangle className="w-4 h-4 text-rose-400" />
-                <span>Tower-wise Issues (A - F)</span>
+                <span>Tower Issues (A - F)</span>
               </button>
             </div>
           </div>
@@ -85,7 +99,9 @@ export default function HeroBanner({ stats, onSelectTab }: HeroBannerProps) {
               className="bg-slate-800/60 hover:bg-slate-800/90 cursor-pointer border border-slate-700/70 hover:border-sky-400/50 rounded-2xl p-4 backdrop-blur-md transition-all duration-200 group shadow-md"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs text-sky-300 font-semibold uppercase tracking-wider">Events &amp; Fests</span>
+                <span className="text-xs text-sky-300 font-semibold uppercase tracking-wider">
+                  Events &amp; Fests
+                </span>
                 <Sparkles className="w-4 h-4 text-amber-400 group-hover:scale-125 transition" />
               </div>
               <p className="text-2xl sm:text-3xl font-extrabold text-white mt-1.5 font-sans">
@@ -100,7 +116,9 @@ export default function HeroBanner({ stats, onSelectTab }: HeroBannerProps) {
               className="bg-amber-950/40 hover:bg-amber-950/60 cursor-pointer border border-amber-800/60 hover:border-amber-400/70 rounded-2xl p-4 backdrop-blur-md transition-all duration-200 group shadow-md"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs text-amber-300 font-semibold uppercase tracking-wider">ADO Deliverables</span>
+                <span className="text-xs text-amber-300 font-semibold uppercase tracking-wider">
+                  ADO Deliverables
+                </span>
                 <Kanban className="w-4 h-4 text-amber-400 group-hover:scale-125 transition" />
               </div>
               <p className="text-2xl sm:text-3xl font-extrabold text-amber-300 mt-1.5 font-mono">
@@ -117,15 +135,15 @@ export default function HeroBanner({ stats, onSelectTab }: HeroBannerProps) {
               className="bg-rose-950/40 hover:bg-rose-950/60 cursor-pointer border border-rose-800/60 hover:border-rose-400/70 rounded-2xl p-4 backdrop-blur-md transition-all duration-200 group shadow-md"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs text-rose-300 font-semibold uppercase tracking-wider">Tower Tickets</span>
+                <span className="text-xs text-rose-300 font-semibold uppercase tracking-wider">
+                  Tower Tickets
+                </span>
                 <ShieldAlert className="w-4 h-4 text-rose-400 group-hover:scale-125 transition" />
               </div>
               <p className="text-2xl sm:text-3xl font-extrabold text-rose-300 mt-1.5 font-mono">
                 {stats?.open_issues_count ?? 0}
               </p>
-              <p className="text-[11px] text-rose-200/80 mt-0.5 font-medium">
-                across Towers A to F
-              </p>
+              <p className="text-[11px] text-rose-200/80 mt-0.5 font-medium">across Towers A to F</p>
             </div>
 
             {/* Stat 4: GBM Records */}
@@ -134,7 +152,9 @@ export default function HeroBanner({ stats, onSelectTab }: HeroBannerProps) {
               className="bg-slate-800/60 hover:bg-slate-800/90 cursor-pointer border border-slate-700/70 hover:border-sky-400/50 rounded-2xl p-4 backdrop-blur-md transition-all duration-200 group shadow-md"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs text-sky-300 font-semibold uppercase tracking-wider">GBM Meetings</span>
+                <span className="text-xs text-sky-300 font-semibold uppercase tracking-wider">
+                  GBM Meetings
+                </span>
                 <FileText className="w-4 h-4 text-sky-400 group-hover:scale-125 transition" />
               </div>
               <p className="text-2xl sm:text-3xl font-extrabold text-white mt-1.5 font-sans">
@@ -149,12 +169,17 @@ export default function HeroBanner({ stats, onSelectTab }: HeroBannerProps) {
               className="col-span-2 sm:col-span-2 bg-indigo-950/40 hover:bg-indigo-950/60 cursor-pointer border border-indigo-800/60 hover:border-indigo-400/70 rounded-2xl p-4 backdrop-blur-md transition-all duration-200 group shadow-md"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs text-indigo-300 font-semibold uppercase tracking-wider">Towers &amp; Committee</span>
+                <span className="text-xs text-indigo-300 font-semibold uppercase tracking-wider">
+                  Towers &amp; Committee
+                </span>
                 <Users className="w-4 h-4 text-indigo-400 group-hover:scale-125 transition" />
               </div>
               <div className="flex items-baseline justify-between mt-1.5">
                 <p className="text-2xl sm:text-3xl font-extrabold text-white font-sans">
-                  6 Towers <span className="text-xs font-semibold text-indigo-200">• {stats?.team_members_count ?? 0} Office Bearers</span>
+                  6 Towers{" "}
+                  <span className="text-xs font-semibold text-indigo-200">
+                    • {stats?.team_members_count ?? 0} Office Bearers
+                  </span>
                 </p>
                 <span className="text-[11px] text-indigo-300 font-bold bg-indigo-900/60 border border-indigo-700 px-2 py-0.5 rounded-full">
                   Tenure: 2025-2027

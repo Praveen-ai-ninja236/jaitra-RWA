@@ -10,6 +10,7 @@ import GeneralBodyMeetingsTab from "../components/GeneralBodyMeetingsTab";
 import IssuesTrackerTab from "../components/IssuesTrackerTab";
 import ADOBorderPendingsTab from "../components/ADOBorderPendingsTab";
 import TeamListTab from "../components/TeamListTab";
+import AuditReportModal from "../components/AuditReportModal";
 import {
   CulturalEvent,
   CulturalEventCreate,
@@ -30,6 +31,7 @@ import {
   TeamMember,
   TeamMemberCreate,
   SocietyStats,
+  AuditTransaction,
 } from "../lib/types";
 import * as api from "../lib/api";
 import {
@@ -42,7 +44,7 @@ import {
   ExternalLink,
   CheckCircle,
   AlertCircle,
-  Shield
+  Shield,
 } from "lucide-react";
 
 export default function JaitraPortal() {
@@ -59,6 +61,10 @@ export default function JaitraPortal() {
   const [issues, setIssues] = useState<CommunityIssue[]>([]);
   const [adoTasks, setAdoTasks] = useState<ADOTask[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+
+  // Audit Report State
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [auditTransactions, setAuditTransactions] = useState<AuditTransaction[]>([]);
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
     setNotification({ message, type });
@@ -95,6 +101,7 @@ export default function JaitraPortal() {
         issuesData,
         tasksData,
         teamData,
+        auditData,
       ] = await Promise.all([
         api.getStats().catch(() => null),
         api.getCulturalEvents().catch(() => []),
@@ -103,6 +110,7 @@ export default function JaitraPortal() {
         api.getIssues().catch(() => []),
         api.getADOTasks().catch(() => []),
         api.getTeam().catch(() => []),
+        api.getAuditTransactions().catch(() => []),
       ]);
 
       if (statsData) setStats(statsData);
@@ -112,6 +120,7 @@ export default function JaitraPortal() {
       setIssues(issuesData);
       setAdoTasks(tasksData);
       setTeamMembers(teamData);
+      setAuditTransactions(auditData);
       setIsBackendConnected(true);
     } catch (err) {
       console.warn("Backend fetch failed, running with local state", err);
@@ -125,6 +134,16 @@ export default function JaitraPortal() {
     fetchAllData();
   }, [fetchAllData]);
 
+  const handleOpenAuditReport = async () => {
+    try {
+      const transactions = await api.getAuditTransactions();
+      setAuditTransactions(transactions);
+    } catch (e) {
+      console.error(e);
+    }
+    setIsAuditModalOpen(true);
+  };
+
   // 1. Cultural Events Handlers
   const handleAddCulturalEvent = async (eventData: CulturalEventCreate) => {
     try {
@@ -137,11 +156,11 @@ export default function JaitraPortal() {
     }
   };
 
-  const handleUpdateCulturalEvent = async (id: number, eventData: CulturalEventCreate) => {
+  const handleUpdateCulturalEvent = async (id: number, eventData: Partial<CulturalEventCreate>) => {
     try {
       const updated = await api.updateCulturalEvent(id, eventData);
       setCulturalEvents(culturalEvents.map((e) => (e.id === id ? updated : e)));
-      showToast("Cultural event details updated!");
+      showToast("Cultural event details updated in live database!");
       fetchAllData();
     } catch (err) {
       showToast("Failed to update event: " + (err as Error).message, "error");
@@ -149,11 +168,11 @@ export default function JaitraPortal() {
   };
 
   const handleDeleteCulturalEvent = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this event?")) return;
     try {
       await api.deleteCulturalEvent(id);
       setCulturalEvents(culturalEvents.filter((e) => e.id !== id));
       showToast("Event removed from database.");
+      fetchAllData();
     } catch (err) {
       showToast("Failed to delete event: " + (err as Error).message, "error");
     }
@@ -166,6 +185,16 @@ export default function JaitraPortal() {
       fetchAllData();
     } catch (err) {
       showToast("Failed to add participant: " + (err as Error).message, "error");
+    }
+  };
+
+  const handleUpdateParticipant = async (participantId: number, partData: Partial<CulturalParticipantCreate>) => {
+    try {
+      await api.updateCulturalParticipant(participantId, partData);
+      showToast("Participant updates saved to DB!");
+      fetchAllData();
+    } catch (err) {
+      showToast("Failed to update participant: " + (err as Error).message, "error");
     }
   };
 
@@ -186,6 +215,16 @@ export default function JaitraPortal() {
       fetchAllData();
     } catch (err) {
       showToast("Failed to add agenda: " + (err as Error).message, "error");
+    }
+  };
+
+  const handleUpdateAgenda = async (agendaId: number, agendaData: Partial<CulturalAgendaCreate>) => {
+    try {
+      await api.updateCulturalAgenda(agendaId, agendaData);
+      showToast("Agenda slot updated in DB!");
+      fetchAllData();
+    } catch (err) {
+      showToast("Failed to update agenda: " + (err as Error).message, "error");
     }
   };
 
@@ -211,12 +250,23 @@ export default function JaitraPortal() {
     }
   };
 
+  const handleUpdateFestival = async (id: number, festData: Partial<FestivalCelebrationCreate>) => {
+    try {
+      const updated = await api.updateFestival(id, festData);
+      setFestivals(festivals.map((f) => (f.id === id ? updated : f)));
+      showToast("Festival details updated in Neon DB!");
+      fetchAllData();
+    } catch (err) {
+      showToast("Failed to update festival: " + (err as Error).message, "error");
+    }
+  };
+
   const handleDeleteFestival = async (id: number) => {
-    if (!confirm("Are you sure you want to remove this festival celebration?")) return;
     try {
       await api.deleteFestival(id);
       setFestivals(festivals.filter((f) => f.id !== id));
       showToast("Festival record removed.");
+      fetchAllData();
     } catch (err) {
       showToast("Failed to delete festival: " + (err as Error).message, "error");
     }
@@ -229,6 +279,16 @@ export default function JaitraPortal() {
       fetchAllData();
     } catch (err) {
       showToast("Failed to record collection: " + (err as Error).message, "error");
+    }
+  };
+
+  const handleUpdateCollection = async (collectionId: number, collData: Partial<FestivalCollectionCreate>) => {
+    try {
+      await api.updateFestivalCollection(collectionId, collData);
+      showToast("Collection record updated in database!");
+      fetchAllData();
+    } catch (err) {
+      showToast("Failed to update collection: " + (err as Error).message, "error");
     }
   };
 
@@ -245,10 +305,20 @@ export default function JaitraPortal() {
   const handleAddExpense = async (festivalId: number, expData: FestivalExpenseCreate) => {
     try {
       await api.addFestivalExpense(festivalId, expData);
-      showToast(`Expense bill ₹${expData.amount} submitted for audit approval!`);
+      showToast(`Expense bill ₹${expData.amount} submitted for audit approval in DB!`);
       fetchAllData();
     } catch (err) {
       showToast("Failed to add expense: " + (err as Error).message, "error");
+    }
+  };
+
+  const handleUpdateExpense = async (expenseId: number, expData: Partial<FestivalExpenseCreate>) => {
+    try {
+      await api.updateFestivalExpense(expenseId, expData);
+      showToast("Expense voucher updated in database!");
+      fetchAllData();
+    } catch (err) {
+      showToast("Failed to update expense: " + (err as Error).message, "error");
     }
   };
 
@@ -284,11 +354,11 @@ export default function JaitraPortal() {
     }
   };
 
-  const handleUpdateMeeting = async (id: number, meetingData: GeneralBodyMeetingCreate) => {
+  const handleUpdateMeeting = async (id: number, meetingData: Partial<GeneralBodyMeetingCreate>) => {
     try {
       const updated = await api.updateMeeting(id, meetingData);
       setMeetings(meetings.map((m) => (m.id === id ? updated : m)));
-      showToast("GBM minutes & resolutions updated!");
+      showToast("GBM minutes & resolutions updated in DB!");
       fetchAllData();
     } catch (err) {
       showToast("Failed to update meeting: " + (err as Error).message, "error");
@@ -296,11 +366,11 @@ export default function JaitraPortal() {
   };
 
   const handleDeleteMeeting = async (id: number) => {
-    if (!confirm("Are you sure you want to remove this meeting record?")) return;
     try {
       await api.deleteMeeting(id);
       setMeetings(meetings.filter((m) => m.id !== id));
       showToast("Meeting record removed.");
+      fetchAllData();
     } catch (err) {
       showToast("Failed to delete meeting: " + (err as Error).message, "error");
     }
@@ -318,11 +388,11 @@ export default function JaitraPortal() {
     }
   };
 
-  const handleUpdateIssue = async (id: number, issueData: CommunityIssueCreate) => {
+  const handleUpdateIssue = async (id: number, issueData: Partial<CommunityIssueCreate>) => {
     try {
       const updated = await api.updateIssue(id, issueData);
       setIssues(issues.map((i) => (i.id === id ? updated : i)));
-      showToast(`Ticket ${updated.issue_code || id} updated!`);
+      showToast(`Ticket ${updated.issue_code || id} updated in DB!`);
       fetchAllData();
     } catch (err) {
       showToast("Failed to update issue: " + (err as Error).message, "error");
@@ -330,11 +400,11 @@ export default function JaitraPortal() {
   };
 
   const handleDeleteIssue = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this issue ticket?")) return;
     try {
       await api.deleteIssue(id);
       setIssues(issues.filter((i) => i.id !== id));
       showToast("Issue ticket deleted.");
+      fetchAllData();
     } catch (err) {
       showToast("Failed to delete issue: " + (err as Error).message, "error");
     }
@@ -345,18 +415,18 @@ export default function JaitraPortal() {
     try {
       const newTask = await api.createADOTask(taskData);
       setAdoTasks([...adoTasks, newTask]);
-      showToast(`Work item ${newTask.task_code || "ADO"} added to board!`);
+      showToast(`Work item ${newTask.task_code || "ADO"} added to board in DB!`);
       fetchAllData();
     } catch (err) {
       showToast("Failed to create ADO task: " + (err as Error).message, "error");
     }
   };
 
-  const handleUpdateADOTask = async (id: number, taskData: ADOTaskCreate) => {
+  const handleUpdateADOTask = async (id: number, taskData: Partial<ADOTaskCreate>) => {
     try {
       const updated = await api.updateADOTask(id, taskData);
       setAdoTasks(adoTasks.map((t) => (t.id === id ? updated : t)));
-      showToast(`ADO deliverable ${updated.task_code} updated!`);
+      showToast(`ADO deliverable ${updated.task_code} updated in DB!`);
       fetchAllData();
     } catch (err) {
       showToast("Failed to update ADO task: " + (err as Error).message, "error");
@@ -373,17 +443,18 @@ export default function JaitraPortal() {
       const updated = await api.updateADOTaskStatus(id, status, progress, blockers);
       setAdoTasks(adoTasks.map((t) => (t.id === id ? updated : t)));
       showToast(`Work item ${updated.task_code} moved to ${status}`);
+      fetchAllData();
     } catch (err) {
       showToast("Failed to update ADO task: " + (err as Error).message, "error");
     }
   };
 
   const handleDeleteADOTask = async (id: number) => {
-    if (!confirm("Are you sure you want to remove this ADO deliverable?")) return;
     try {
       await api.deleteADOTask(id);
       setAdoTasks(adoTasks.filter((t) => t.id !== id));
       showToast("ADO work item removed.");
+      fetchAllData();
     } catch (err) {
       showToast("Failed to delete task: " + (err as Error).message, "error");
     }
@@ -392,7 +463,7 @@ export default function JaitraPortal() {
   const handleAddADOComment = async (taskId: number, commentData: ADOCommentCreate) => {
     try {
       await api.addADOComment(taskId, commentData);
-      showToast("Discussion update posted to work item!");
+      showToast("Discussion update posted to work item in DB!");
       fetchAllData();
     } catch (err) {
       showToast("Failed to add comment: " + (err as Error).message, "error");
@@ -402,7 +473,7 @@ export default function JaitraPortal() {
   const handleAddADOAttachment = async (taskId: number, attData: ADOAttachmentCreate) => {
     try {
       await api.addADOAttachment(taskId, attData);
-      showToast("Evidence proof attached to work item!");
+      showToast("Evidence proof attached to work item in DB!");
       fetchAllData();
     } catch (err) {
       showToast("Failed to attach evidence: " + (err as Error).message, "error");
@@ -424,19 +495,30 @@ export default function JaitraPortal() {
     try {
       const newMember = await api.addTeamMember(memberData);
       setTeamMembers([...teamMembers, newMember]);
-      showToast(`${newMember.name} added to Jaitra Association committee!`);
+      showToast(`${newMember.name} added to Jaitra Association committee in DB!`);
       fetchAllData();
     } catch (err) {
       showToast("Failed to add member: " + (err as Error).message, "error");
     }
   };
 
+  const handleUpdateTeamMember = async (id: number, memberData: Partial<TeamMemberCreate>) => {
+    try {
+      const updated = await api.updateTeamMember(id, memberData);
+      setTeamMembers(teamMembers.map((m) => (m.id === id ? updated : m)));
+      showToast(`${updated.name} updates saved to DB!`);
+      fetchAllData();
+    } catch (err) {
+      showToast("Failed to update member: " + (err as Error).message, "error");
+    }
+  };
+
   const handleDeleteTeamMember = async (id: number) => {
-    if (!confirm("Are you sure you want to remove this committee member?")) return;
     try {
       await api.deleteTeamMember(id);
       setTeamMembers(teamMembers.filter((m) => m.id !== id));
       showToast("Member removed from committee directory.");
+      fetchAllData();
     } catch (err) {
       showToast("Failed to delete member: " + (err as Error).message, "error");
     }
@@ -452,7 +534,11 @@ export default function JaitraPortal() {
       />
 
       {/* Hero Header Banner with Stats */}
-      <HeroBanner stats={stats} onSelectTab={handleTabChange} />
+      <HeroBanner
+        stats={stats}
+        onSelectTab={handleTabChange}
+        onOpenAuditReport={handleOpenAuditReport}
+      />
 
       {/* Sticky Tabs Navigation */}
       <TabNav
@@ -477,8 +563,10 @@ export default function JaitraPortal() {
             onUpdateEvent={handleUpdateCulturalEvent}
             onDeleteEvent={handleDeleteCulturalEvent}
             onAddParticipant={handleAddParticipant}
+            onUpdateParticipant={handleUpdateParticipant}
             onDeleteParticipant={handleDeleteParticipant}
             onAddAgenda={handleAddAgenda}
+            onUpdateAgenda={handleUpdateAgenda}
             onDeleteAgenda={handleDeleteAgenda}
             isLoading={isLoading}
           />
@@ -488,12 +576,16 @@ export default function JaitraPortal() {
           <FestivalCelebrationsTab
             festivals={festivals}
             onAddFestival={handleAddFestival}
+            onUpdateFestival={handleUpdateFestival}
             onDeleteFestival={handleDeleteFestival}
             onAddCollection={handleAddCollection}
+            onUpdateCollection={handleUpdateCollection}
             onDeleteCollection={handleDeleteCollection}
             onAddExpense={handleAddExpense}
+            onUpdateExpense={handleUpdateExpense}
             onUpdateExpenseStatus={handleUpdateExpenseStatus}
             onDeleteExpense={handleDeleteExpense}
+            onOpenAuditReport={handleOpenAuditReport}
             isLoading={isLoading}
           />
         )}
@@ -536,11 +628,19 @@ export default function JaitraPortal() {
           <TeamListTab
             team={teamMembers}
             onAddMember={handleAddTeamMember}
+            onUpdateMember={handleUpdateTeamMember}
             onDeleteMember={handleDeleteTeamMember}
             isLoading={isLoading}
           />
         )}
       </main>
+
+      {/* Audit Report Modal */}
+      <AuditReportModal
+        isOpen={isAuditModalOpen}
+        onClose={() => setIsAuditModalOpen(false)}
+        transactions={auditTransactions}
+      />
 
       {/* Toast Notification */}
       {notification && (
@@ -582,7 +682,7 @@ export default function JaitraPortal() {
             </span>
           </div>
           <p className="text-[11px] text-slate-500">
-            Powered by Next.js 14, React, TypeScript &amp; Python FastAPI PostgreSQL Database
+            Powered by Next.js 14, React, TypeScript &amp; Neon Serverless PostgreSQL Database
           </p>
         </div>
       </footer>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { TeamMember, TeamMemberCreate } from "../lib/types";
 import {
   Users,
@@ -16,13 +16,16 @@ import {
   Award,
   Crown,
   Briefcase,
-  UserCheck
+  UserCheck,
+  Edit,
 } from "lucide-react";
 import Modal from "./Modal";
+import DynamicSelect from "./DynamicSelect";
 
 interface TeamListTabProps {
   team: TeamMember[];
   onAddMember: (member: TeamMemberCreate) => Promise<void>;
+  onUpdateMember: (id: number, member: Partial<TeamMemberCreate>) => Promise<void>;
   onDeleteMember: (id: number) => Promise<void>;
   isLoading: boolean;
 }
@@ -30,6 +33,7 @@ interface TeamListTabProps {
 export default function TeamListTab({
   team,
   onAddMember,
+  onUpdateMember,
   onDeleteMember,
   isLoading,
 }: TeamListTabProps) {
@@ -37,6 +41,7 @@ export default function TeamListTab({
   const [selectedTower, setSelectedTower] = useState("All");
   const [selectedSubCommittee, setSelectedSubCommittee] = useState("All");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form State
@@ -52,9 +57,9 @@ export default function TeamListTab({
     status: "Active",
   });
 
-  const towers = ["All", "Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F"];
+  const defaultTowers = ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F"];
 
-  const roles = [
+  const defaultRoles = [
     "President",
     "Vice President",
     "General Secretary",
@@ -74,8 +79,7 @@ export default function TeamListTab({
     "Executive Member",
   ];
 
-  const subCommittees = [
-    "All",
+  const defaultSubCommittees = [
     "Executive & Governance",
     "Legal, Compliance & Admin",
     "Finance, Audit & Corpus",
@@ -85,22 +89,28 @@ export default function TeamListTab({
     "Events, Festivals & Arts",
     "Clubhouse, Gym & Grounds",
     "Builder Handover & IGS Oversight",
-    "Resident Welfare & Elevators"
+    "Resident Welfare & Elevators",
   ];
 
-  const filteredTeam = team.filter((m) => {
-    const matchSearch =
-      m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (m.wing_flat && m.wing_flat.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      m.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (m.sub_committee && m.sub_committee.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchTower = selectedTower === "All" || m.tower === selectedTower || (m.wing_flat && m.wing_flat.includes(selectedTower));
-    const matchSub =
-      selectedSubCommittee === "All" ||
-      (m.sub_committee && m.sub_committee.toLowerCase().includes(selectedSubCommittee.toLowerCase()));
-    return matchSearch && matchTower && matchSub;
-  });
+  const filteredTeam = useMemo(() => {
+    return team.filter((m) => {
+      const matchSearch =
+        m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (m.wing_flat && m.wing_flat.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        m.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (m.sub_committee && m.sub_committee.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchTower =
+        selectedTower === "All" ||
+        m.tower === selectedTower ||
+        (m.wing_flat && m.wing_flat.includes(selectedTower));
+      const matchSub =
+        selectedSubCommittee === "All" ||
+        (m.sub_committee &&
+          m.sub_committee.toLowerCase().includes(selectedSubCommittee.toLowerCase()));
+      return matchSearch && matchTower && matchSub;
+    });
+  }, [team, searchTerm, selectedTower, selectedSubCommittee]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,11 +137,26 @@ export default function TeamListTab({
     }
   };
 
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember) return;
+    setIsSubmitting(true);
+    try {
+      await onUpdateMember(editingMember.id, editingMember);
+      setEditingMember(null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const getRoleBadgeStyle = (role: string) => {
     if (role.includes("President")) return "bg-purple-950 text-purple-300 border-purple-700/60";
     if (role.includes("Secretary")) return "bg-sky-950 text-sky-300 border-sky-700/60";
     if (role.includes("Treasurer")) return "bg-emerald-950 text-emerald-300 border-emerald-700/60";
-    if (role.includes("Head") || role.includes("Lead")) return "bg-amber-950 text-amber-300 border-amber-700/60";
+    if (role.includes("Head") || role.includes("Lead"))
+      return "bg-amber-950 text-amber-300 border-amber-700/60";
     return "bg-slate-800 text-slate-300 border-slate-700";
   };
 
@@ -189,8 +214,11 @@ export default function TeamListTab({
               onChange={(e) => setSelectedTower(e.target.value)}
               className="bg-transparent font-bold text-white focus:outline-none cursor-pointer"
             >
-              {towers.map((t) => (
-                <option key={t} value={t} className="bg-slate-900 text-white">{t}</option>
+              <option value="All">All Towers</option>
+              {defaultTowers.map((t) => (
+                <option key={t} value={t} className="bg-slate-900 text-white">
+                  {t}
+                </option>
               ))}
             </select>
           </div>
@@ -203,8 +231,11 @@ export default function TeamListTab({
               onChange={(e) => setSelectedSubCommittee(e.target.value)}
               className="bg-transparent font-bold text-white focus:outline-none cursor-pointer max-w-[170px] truncate"
             >
-              {subCommittees.map((s) => (
-                <option key={s} value={s} className="bg-slate-900 text-white">{s}</option>
+              <option value="All">All Portfolios</option>
+              {defaultSubCommittees.map((s) => (
+                <option key={s} value={s} className="bg-slate-900 text-white">
+                  {s}
+                </option>
               ))}
             </select>
           </div>
@@ -251,20 +282,35 @@ export default function TeamListTab({
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => onDeleteMember(member.id)}
-                        title="Remove Member"
-                        className="text-slate-600 hover:text-rose-400 p-1 transition"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setEditingMember(member)}
+                          title="Edit Member"
+                          className="text-slate-400 hover:text-amber-300 p-1 transition"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Remove "${member.name}" from committee?`)) {
+                              onDeleteMember(member.id);
+                            }
+                          }}
+                          title="Remove Member"
+                          className="text-slate-400 hover:text-rose-400 p-1 transition"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Sub-committee tag if present */}
                     {member.sub_committee && (
                       <div className="p-2 bg-slate-950/60 rounded-lg border border-slate-800 text-[11px] text-slate-300 mb-3 flex items-center gap-1.5">
                         <Briefcase className="w-3 h-3 text-slate-500 shrink-0" />
-                        <span className="truncate">Portfolios: <strong className="text-sky-300">{member.sub_committee}</strong></span>
+                        <span className="truncate">
+                          Portfolios: <strong className="text-sky-300">{member.sub_committee}</strong>
+                        </span>
                       </div>
                     )}
 
@@ -331,23 +377,21 @@ export default function TeamListTab({
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., S. Ramesh Kumar"
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-300 mb-1">Tower *</label>
-                <select
-                  value={formData.tower}
-                  onChange={(e) => {
-                    const tow = e.target.value;
-                    setFormData({ ...formData, tower: tow, wing_flat: `${tow} - 101` });
+                <DynamicSelect
+                  label="Tower"
+                  required
+                  value={formData.tower || "Tower A"}
+                  onChange={(val) => {
+                    setFormData({ ...formData, tower: val, wing_flat: `${val} - 101` });
                   }}
-                  className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
-                >
-                  {towers.filter(t => t !== "All").map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
+                  options={defaultTowers}
+                />
               </div>
 
               <div>
@@ -358,22 +402,19 @@ export default function TeamListTab({
                   value={formData.wing_flat}
                   onChange={(e) => setFormData({ ...formData, wing_flat: e.target.value })}
                   placeholder="e.g., Tower B - 604"
-                  className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-300 mb-1">Designation / Role *</label>
-              <select
+              <DynamicSelect
+                label="Designation / Role"
+                required
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
-              >
-                {roles.map((r) => (
-                  <option key={r} value={r} className="bg-slate-900 text-white">{r}</option>
-                ))}
-              </select>
+                onChange={(val) => setFormData({ ...formData, role: val })}
+                options={defaultRoles}
+              />
             </div>
 
             <div>
@@ -384,7 +425,7 @@ export default function TeamListTab({
                 value={formData.contact}
                 onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
                 placeholder="e.g., +91 98450 99887"
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
               />
             </div>
 
@@ -395,18 +436,16 @@ export default function TeamListTab({
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="e.g., ramesh@jaitra.org"
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-300 mb-1">Sub-Committee Portfolio</label>
-              <input
-                type="text"
-                value={formData.sub_committee}
-                onChange={(e) => setFormData({ ...formData, sub_committee: e.target.value })}
-                placeholder="e.g., Facility & Builder Handover"
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+              <DynamicSelect
+                label="Sub-Committee Portfolio"
+                value={formData.sub_committee || "Community Welfare"}
+                onChange={(val) => setFormData({ ...formData, sub_committee: val })}
+                options={defaultSubCommittees}
               />
             </div>
 
@@ -418,21 +457,17 @@ export default function TeamListTab({
                   value={formData.term}
                   onChange={(e) => setFormData({ ...formData, term: e.target.value })}
                   placeholder="2025-2027"
-                  className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-300 mb-1">Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
-                >
-                  <option value="Active" className="bg-slate-900 text-white">Active</option>
-                  <option value="Emeritus" className="bg-slate-900 text-white">Emeritus</option>
-                  <option value="Ex-Officio" className="bg-slate-900 text-white">Ex-Officio</option>
-                </select>
+                <DynamicSelect
+                  label="Status"
+                  value={formData.status || "Active"}
+                  onChange={(val) => setFormData({ ...formData, status: val })}
+                  options={["Active", "Emeritus", "Ex-Officio"]}
+                />
               </div>
             </div>
 
@@ -442,128 +477,136 @@ export default function TeamListTab({
               className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2 disabled:opacity-50 mt-4"
             >
               <UserPlus className="w-4 h-4" />
-              <span>{isSubmitting ? "Saving..." : "Save Committee Member"}</span>
+              <span>{isSubmitting ? "Saving..." : "Save Member to Live DB"}</span>
             </button>
           </form>
         </div>
       </div>
 
-      {/* Modal Alternative */}
-      <Modal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        title="Add New Committee Member"
-        subtitle="Register executive committee members or tower block representatives"
-        maxWidth="md"
-      >
-        <form onSubmit={handleSubmit} className="space-y-3.5">
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Full Name *</label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="e.g., S. Ramesh Kumar"
-              className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+      {/* Edit Member Modal */}
+      {editingMember && (
+        <Modal
+          isOpen={Boolean(editingMember)}
+          onClose={() => setEditingMember(null)}
+          title={`Edit Committee Member: ${editingMember.name}`}
+          subtitle="Update designation, contact, or sub-committee portfolio in DB"
+          maxWidth="md"
+        >
+          <form onSubmit={handleUpdateSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Tower *</label>
-              <select
-                value={formData.tower}
-                onChange={(e) => {
-                  const tow = e.target.value;
-                  setFormData({ ...formData, tower: tow, wing_flat: `${tow} - 101` });
-                }}
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Full Name *</label>
+              <input
+                type="text"
+                required
+                value={editingMember.name}
+                onChange={(e) => setEditingMember({ ...editingMember, name: e.target.value })}
+                className="w-full text-xs p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <DynamicSelect
+                  label="Tower"
+                  value={editingMember.tower || "Tower A"}
+                  onChange={(val) => setEditingMember({ ...editingMember, tower: val })}
+                  options={defaultTowers}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Flat Details</label>
+                <input
+                  type="text"
+                  value={editingMember.wing_flat || ""}
+                  onChange={(e) =>
+                    setEditingMember({ ...editingMember, wing_flat: e.target.value })
+                  }
+                  className="w-full text-xs p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <DynamicSelect
+                label="Designation / Role"
+                value={editingMember.role}
+                onChange={(val) => setEditingMember({ ...editingMember, role: val })}
+                options={defaultRoles}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Contact Phone *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingMember.contact}
+                  onChange={(e) => setEditingMember({ ...editingMember, contact: e.target.value })}
+                  className="w-full text-xs p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Official Email</label>
+                <input
+                  type="email"
+                  value={editingMember.email || ""}
+                  onChange={(e) => setEditingMember({ ...editingMember, email: e.target.value })}
+                  className="w-full text-xs p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <DynamicSelect
+                label="Sub-Committee Portfolio"
+                value={editingMember.sub_committee || ""}
+                onChange={(val) => setEditingMember({ ...editingMember, sub_committee: val })}
+                options={defaultSubCommittees}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Term</label>
+                <input
+                  type="text"
+                  value={editingMember.term || ""}
+                  onChange={(e) => setEditingMember({ ...editingMember, term: e.target.value })}
+                  className="w-full text-xs p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                />
+              </div>
+
+              <div>
+                <DynamicSelect
+                  label="Status"
+                  value={editingMember.status || "Active"}
+                  onChange={(val) => setEditingMember({ ...editingMember, status: val })}
+                  options={["Active", "Emeritus", "Ex-Officio"]}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setEditingMember(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-lg"
               >
-                {towers.filter(t => t !== "All").map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl"
+              >
+                Save Member Updates in DB
+              </button>
             </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Flat Details *</label>
-              <input
-                type="text"
-                required
-                value={formData.wing_flat}
-                onChange={(e) => setFormData({ ...formData, wing_flat: e.target.value })}
-                placeholder="e.g., Tower B - 604"
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Designation *</label>
-            <select
-              value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
-            >
-              {roles.map((r) => (
-                <option key={r} value={r} className="bg-slate-900 text-white">{r}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Contact Phone *</label>
-              <input
-                type="text"
-                required
-                value={formData.contact}
-                onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-                placeholder="e.g., +91 98450 99887"
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Official Email</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="e.g., ramesh@jaitra.org"
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Sub-Committee Portfolio</label>
-            <input
-              type="text"
-              value={formData.sub_committee}
-              onChange={(e) => setFormData({ ...formData, sub_committee: e.target.value })}
-              placeholder="e.g., Facility & Builder Handover"
-              className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
-            <button
-              type="button"
-              onClick={() => setIsAddModalOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-lg transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-md transition disabled:opacity-50"
-            >
-              {isSubmitting ? "Saving..." : "Add to Team"}
-            </button>
-          </div>
-        </form>
-      </Modal>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }

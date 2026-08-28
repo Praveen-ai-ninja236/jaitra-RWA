@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { CommunityIssue, CommunityIssueCreate } from "../lib/types";
 import {
   AlertTriangle,
@@ -23,14 +23,19 @@ import {
   ChevronUp,
   LayoutGrid,
   List,
-  Edit3
+  Edit3,
+  ArrowUpDown,
+  Paperclip,
+  Edit,
 } from "lucide-react";
 import Modal from "./Modal";
+import DynamicSelect from "./DynamicSelect";
+import FileUploadInput from "./FileUploadInput";
 
 interface IssuesTrackerTabProps {
   issues: CommunityIssue[];
   onAddIssue: (issue: CommunityIssueCreate) => Promise<void>;
-  onUpdateIssue: (id: number, issue: CommunityIssueCreate) => Promise<void>;
+  onUpdateIssue: (id: number, issue: Partial<CommunityIssueCreate>) => Promise<void>;
   onDeleteIssue: (id: number) => Promise<void>;
   isLoading: boolean;
 }
@@ -52,6 +57,10 @@ export default function IssuesTrackerTab({
   const [editingIssue, setEditingIssue] = useState<CommunityIssue | null>(null);
   const [collapsedTowers, setCollapsedTowers] = useState<Record<string, boolean>>({});
 
+  // Sort State for All Rows View
+  const [sortField, setSortField] = useState<"created_at" | "priority" | "status" | "tower">("created_at");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form State
@@ -68,9 +77,10 @@ export default function IssuesTrackerTab({
     created_at: new Date().toISOString().split("T")[0],
     description: "",
     resolution_notes: "",
+    attachment_url: "",
   });
 
-  const towersList = [
+  const defaultTowers = [
     "Tower A",
     "Tower B",
     "Tower C",
@@ -78,35 +88,55 @@ export default function IssuesTrackerTab({
     "Tower E",
     "Tower F",
     "Clubhouse",
-    "Common Space"
+    "Common Space",
   ];
 
-  const categories = [
-    "All",
+  const defaultCategories = [
     "Civil & Seepage",
     "Electrical & Lift",
     "STP & Water Supply",
     "Security & Access",
     "Landscaping & Pest",
     "Common Amenities",
+    "Plumbing & Sanitation",
+    "Fire Safety",
   ];
 
-  const priorities = ["All", "Critical", "High", "Medium", "Low"];
-  const statuses = ["All", "Open", "In Progress", "Under Inspection", "Resolved", "Closed"];
+  const defaultPriorities = ["Critical", "High", "Medium", "Low"];
+  const defaultStatuses = ["Open", "In Progress", "Under Inspection", "Resolved", "Closed"];
 
-  const filteredIssues = issues.filter((iss) => {
-    const matchSearch =
-      iss.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (iss.issue_code && iss.issue_code.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      iss.flat_or_location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      iss.reported_by.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      iss.assigned_to.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchTower = selectedTowerFilter === "All" || iss.tower === selectedTowerFilter;
-    const matchStatus = selectedStatus === "All" || iss.status === selectedStatus;
-    const matchPriority = selectedPriority === "All" || iss.priority === selectedPriority;
-    const matchCategory = selectedCategory === "All" || iss.category.toLowerCase().includes(selectedCategory.toLowerCase());
-    return matchSearch && matchTower && matchStatus && matchPriority && matchCategory;
-  });
+  const filteredIssues = useMemo(() => {
+    return issues
+      .filter((iss) => {
+        const matchSearch =
+          iss.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (iss.issue_code && iss.issue_code.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          iss.flat_or_location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          iss.reported_by.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          iss.assigned_to.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchTower = selectedTowerFilter === "All" || iss.tower === selectedTowerFilter;
+        const matchStatus = selectedStatus === "All" || iss.status === selectedStatus;
+        const matchPriority = selectedPriority === "All" || iss.priority === selectedPriority;
+        const matchCategory =
+          selectedCategory === "All" ||
+          iss.category.toLowerCase().includes(selectedCategory.toLowerCase());
+
+        return matchSearch && matchTower && matchStatus && matchPriority && matchCategory;
+      })
+      .sort((a, b) => {
+        if (sortField === "created_at") {
+          const dA = new Date(a.created_at || "").getTime();
+          const dB = new Date(b.created_at || "").getTime();
+          return sortOrder === "asc" ? dA - dB : dB - dA;
+        }
+        let valA = a[sortField] || "";
+        let valB = b[sortField] || "";
+        return sortOrder === "asc"
+          ? String(valA).localeCompare(String(valB))
+          : String(valB).localeCompare(String(valA));
+      });
+  }, [issues, searchTerm, selectedTowerFilter, selectedStatus, selectedPriority, selectedCategory, sortField, sortOrder]);
 
   const toggleTowerCollapse = (towerName: string) => {
     setCollapsedTowers({
@@ -138,6 +168,7 @@ export default function IssuesTrackerTab({
         created_at: new Date().toISOString().split("T")[0],
         description: "",
         resolution_notes: "",
+        attachment_url: "",
       });
     } catch (err) {
       console.error(err);
@@ -167,7 +198,9 @@ export default function IssuesTrackerTab({
         status: newStatus,
         resolution_notes:
           newStatus === "Resolved"
-            ? (issue.resolution_notes ? `${issue.resolution_notes} (Resolved)` : "Verified and resolved by facility team.")
+            ? issue.resolution_notes
+              ? `${issue.resolution_notes} (Resolved)`
+              : "Verified and resolved by facility team."
             : issue.resolution_notes,
       });
     } catch (err) {
@@ -263,9 +296,11 @@ export default function IssuesTrackerTab({
               onChange={(e) => setSelectedTowerFilter(e.target.value)}
               className="bg-transparent font-bold text-white focus:outline-none cursor-pointer"
             >
-              <option value="All" className="bg-slate-900 text-white">All Towers (A - F)</option>
-              {towersList.map((t) => (
-                <option key={t} value={t} className="bg-slate-900 text-white">{t}</option>
+              <option value="All">All Towers (A - F)</option>
+              {defaultTowers.map((t) => (
+                <option key={t} value={t} className="bg-slate-900 text-white">
+                  {t}
+                </option>
               ))}
             </select>
           </div>
@@ -278,8 +313,11 @@ export default function IssuesTrackerTab({
               onChange={(e) => setSelectedPriority(e.target.value)}
               className="bg-transparent font-bold text-white focus:outline-none cursor-pointer"
             >
-              {priorities.map((p) => (
-                <option key={p} value={p} className="bg-slate-900 text-white">{p}</option>
+              <option value="All">All</option>
+              {defaultPriorities.map((p) => (
+                <option key={p} value={p} className="bg-slate-900 text-white">
+                  {p}
+                </option>
               ))}
             </select>
           </div>
@@ -292,8 +330,11 @@ export default function IssuesTrackerTab({
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="bg-transparent font-bold text-white focus:outline-none cursor-pointer"
             >
-              {statuses.map((s) => (
-                <option key={s} value={s} className="bg-slate-900 text-white">{s}</option>
+              <option value="All">All Statuses</option>
+              {defaultStatuses.map((s) => (
+                <option key={s} value={s} className="bg-slate-900 text-white">
+                  {s}
+                </option>
               ))}
             </select>
           </div>
@@ -303,11 +344,13 @@ export default function IssuesTrackerTab({
       {/* VIEW MODE 1: TOWER LEVEL CONTAINERS WITH ROW-WISE TICKETS */}
       {viewMode === "tower-containers" && (
         <div className="space-y-5">
-          {towersList
+          {defaultTowers
             .filter((towerName) => selectedTowerFilter === "All" || selectedTowerFilter === towerName)
             .map((towerName) => {
               const towerIssues = filteredIssues.filter((i) => i.tower === towerName);
-              const openCount = towerIssues.filter((i) => i.status !== "Resolved" && i.status !== "Closed").length;
+              const openCount = towerIssues.filter(
+                (i) => i.status !== "Resolved" && i.status !== "Closed"
+              ).length;
               const isCollapsed = collapsedTowers[towerName];
 
               return (
@@ -321,7 +364,11 @@ export default function IssuesTrackerTab({
                     className="p-4 sm:p-5 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-950 transition"
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`px-3 py-1 rounded-xl border font-black text-xs uppercase tracking-wider ${getTowerColor(towerName)}`}>
+                      <div
+                        className={`px-3 py-1 rounded-xl border font-black text-xs uppercase tracking-wider ${getTowerColor(
+                          towerName
+                        )}`}
+                      >
                         {towerName}
                       </div>
 
@@ -346,7 +393,11 @@ export default function IssuesTrackerTab({
                       <span className="text-xs text-slate-400 font-semibold hidden sm:inline">
                         {isCollapsed ? "Expand Tickets" : "Collapse"}
                       </span>
-                      {isCollapsed ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronUp className="w-4 h-4 text-slate-400" />}
+                      {isCollapsed ? (
+                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                      ) : (
+                        <ChevronUp className="w-4 h-4 text-slate-400" />
+                      )}
                     </div>
                   </div>
 
@@ -379,22 +430,31 @@ export default function IssuesTrackerTab({
                                   issue.priority === "Critical" ? "bg-rose-950/15" : ""
                                 }`}
                               >
-                                {/* Ticket Number */}
                                 <td className="p-3 font-mono font-extrabold text-sky-400">
                                   {issue.issue_code || `ISS-${issue.id}`}
                                 </td>
 
-                                {/* Flat / Location */}
                                 <td className="p-3 font-semibold text-white whitespace-nowrap">
-                                  {issue.flat_no ? `${issue.tower} - ${issue.flat_no}` : issue.flat_or_location}
+                                  {issue.flat_no
+                                    ? `${issue.tower} - ${issue.flat_no}`
+                                    : issue.flat_or_location}
                                 </td>
 
-                                {/* Title & Category */}
                                 <td className="p-3 max-w-xs">
                                   <p className="font-bold text-white leading-snug">{issue.title}</p>
-                                  <span className="text-[10px] text-slate-400 font-semibold bg-slate-800 px-1.5 py-0.2 rounded border border-slate-700 mt-0.5 inline-block">
+                                  <span className="text-[10px] text-slate-400 font-semibold bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700 mt-0.5 inline-block">
                                     {issue.category}
                                   </span>
+                                  {issue.attachment_url && (
+                                    <a
+                                      href={issue.attachment_url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-[10px] text-sky-400 hover:underline flex items-center gap-0.5 mt-0.5"
+                                    >
+                                      <Paperclip className="w-3 h-3" /> Attached Photo/Doc
+                                    </a>
+                                  )}
                                   {issue.resolution_notes && (
                                     <p className="text-[11px] text-emerald-400 italic mt-0.5">
                                       ↳ Note: {issue.resolution_notes}
@@ -402,12 +462,10 @@ export default function IssuesTrackerTab({
                                   )}
                                 </td>
 
-                                {/* Reported By */}
                                 <td className="p-3 text-slate-300 whitespace-nowrap">
                                   {issue.reported_by}
                                 </td>
 
-                                {/* Priority Badge */}
                                 <td className="p-3 whitespace-nowrap">
                                   <span
                                     className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
@@ -422,7 +480,6 @@ export default function IssuesTrackerTab({
                                   </span>
                                 </td>
 
-                                {/* Status Badge */}
                                 <td className="p-3 whitespace-nowrap">
                                   <span
                                     className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
@@ -437,12 +494,10 @@ export default function IssuesTrackerTab({
                                   </span>
                                 </td>
 
-                                {/* Assigned Authority */}
                                 <td className="p-3 text-slate-300 text-[11px] whitespace-nowrap">
                                   {issue.assigned_to}
                                 </td>
 
-                                {/* Actions */}
                                 <td className="p-3 text-right whitespace-nowrap">
                                   <div className="flex items-center justify-end gap-1.5">
                                     {issue.status !== "Resolved" && (
@@ -458,13 +513,17 @@ export default function IssuesTrackerTab({
                                     <button
                                       onClick={() => setEditingIssue(issue)}
                                       title="Edit Ticket"
-                                      className="p-1 text-slate-400 hover:text-white"
+                                      className="p-1 text-slate-400 hover:text-amber-300"
                                     >
-                                      <Edit3 className="w-3.5 h-3.5" />
+                                      <Edit className="w-3.5 h-3.5" />
                                     </button>
 
                                     <button
-                                      onClick={() => onDeleteIssue(issue.id)}
+                                      onClick={() => {
+                                        if (confirm(`Delete ticket "${issue.title}"?`)) {
+                                          onDeleteIssue(issue.id);
+                                        }
+                                      }}
                                       title="Delete Ticket"
                                       className="p-1 text-slate-500 hover:text-rose-400"
                                     >
@@ -493,12 +552,42 @@ export default function IssuesTrackerTab({
               <thead className="bg-slate-800 text-slate-400 uppercase font-bold text-[11px]">
                 <tr>
                   <th className="p-3">Ticket #</th>
-                  <th className="p-3">Tower</th>
+                  <th
+                    onClick={() => {
+                      setSortField("tower");
+                      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                    }}
+                    className="p-3 cursor-pointer hover:text-white"
+                  >
+                    <div className="flex items-center gap-1">
+                      Tower <ArrowUpDown className="w-3 h-3" />
+                    </div>
+                  </th>
                   <th className="p-3">Flat / Location</th>
                   <th className="p-3">Issue Title &amp; Category</th>
                   <th className="p-3">Reported By</th>
-                  <th className="p-3">Priority</th>
-                  <th className="p-3">Status</th>
+                  <th
+                    onClick={() => {
+                      setSortField("priority");
+                      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                    }}
+                    className="p-3 cursor-pointer hover:text-white"
+                  >
+                    <div className="flex items-center gap-1">
+                      Priority <ArrowUpDown className="w-3 h-3" />
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => {
+                      setSortField("status");
+                      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                    }}
+                    className="p-3 cursor-pointer hover:text-white"
+                  >
+                    <div className="flex items-center gap-1">
+                      Status <ArrowUpDown className="w-3 h-3" />
+                    </div>
+                  </th>
                   <th className="p-3">Assigned To</th>
                   <th className="p-3 text-right">Actions</th>
                 </tr>
@@ -506,40 +595,70 @@ export default function IssuesTrackerTab({
               <tbody className="divide-y divide-slate-800 text-slate-300">
                 {filteredIssues.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="p-8 text-center text-slate-500 italic">No tickets found.</td>
+                    <td colSpan={9} className="p-8 text-center text-slate-500 italic">
+                      No tickets found.
+                    </td>
                   </tr>
                 ) : (
                   filteredIssues.map((issue) => (
                     <tr key={issue.id} className="hover:bg-slate-800/40">
-                      <td className="p-3 font-mono font-extrabold text-sky-400">{issue.issue_code || `ISS-${issue.id}`}</td>
+                      <td className="p-3 font-mono font-extrabold text-sky-400">
+                        {issue.issue_code || `ISS-${issue.id}`}
+                      </td>
                       <td className="p-3 font-bold text-white">{issue.tower}</td>
                       <td className="p-3">{issue.flat_no || issue.flat_or_location}</td>
                       <td className="p-3 max-w-xs">
                         <p className="font-bold text-white">{issue.title}</p>
-                        <span className="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.2 rounded border border-slate-700">{issue.category}</span>
+                        <span className="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">
+                          {issue.category}
+                        </span>
                       </td>
                       <td className="p-3">{issue.reported_by}</td>
                       <td className="p-3">
-                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
-                          issue.priority === "Critical" ? "bg-rose-950 text-rose-300 border-rose-600" :
-                          issue.priority === "High" ? "bg-amber-950 text-amber-300 border-amber-600" :
-                          "bg-slate-800 text-slate-300 border-slate-700"
-                        }`}>{issue.priority}</span>
+                        <span
+                          className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
+                            issue.priority === "Critical"
+                              ? "bg-rose-950 text-rose-300 border-rose-600"
+                              : issue.priority === "High"
+                              ? "bg-amber-950 text-amber-300 border-amber-600"
+                              : "bg-slate-800 text-slate-300 border-slate-700"
+                          }`}
+                        >
+                          {issue.priority}
+                        </span>
                       </td>
                       <td className="p-3">
-                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
-                          issue.status === "Resolved" ? "bg-emerald-950 text-emerald-300 border-emerald-700" :
-                          issue.status === "In Progress" ? "bg-sky-950 text-sky-300 border-sky-700" :
-                          "bg-amber-950 text-amber-300 border-amber-700"
-                        }`}>{issue.status}</span>
+                        <span
+                          className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
+                            issue.status === "Resolved"
+                              ? "bg-emerald-950 text-emerald-300 border-emerald-700"
+                              : issue.status === "In Progress"
+                              ? "bg-sky-950 text-sky-300 border-sky-700"
+                              : "bg-amber-950 text-amber-300 border-amber-700"
+                          }`}
+                        >
+                          {issue.status}
+                        </span>
                       </td>
                       <td className="p-3 text-[11px]">{issue.assigned_to}</td>
                       <td className="p-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button onClick={() => setEditingIssue(issue)} className="p-1 text-slate-400 hover:text-white">
-                            <Edit3 className="w-3.5 h-3.5" />
+                          <button
+                            onClick={() => setEditingIssue(issue)}
+                            className="p-1 text-slate-400 hover:text-amber-300"
+                            title="Edit Ticket"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => onDeleteIssue(issue.id)} className="p-1 text-slate-500 hover:text-rose-400">
+                          <button
+                            onClick={() => {
+                              if (confirm(`Delete ticket "${issue.title}"?`)) {
+                                onDeleteIssue(issue.id);
+                              }
+                            }}
+                            className="p-1 text-slate-500 hover:text-rose-400"
+                            title="Delete Ticket"
+                          >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
@@ -559,7 +678,7 @@ export default function IssuesTrackerTab({
           isOpen={Boolean(editingIssue)}
           onClose={() => setEditingIssue(null)}
           title={`Edit Ticket ${editingIssue.issue_code || "ISS"}`}
-          subtitle="Update status, assigned technician, and resolution updates in database"
+          subtitle="Update status, assigned technician, category, and resolution in Neon DB"
           maxWidth="lg"
         >
           <form onSubmit={handleUpdateIssueSubmit} className="space-y-4 text-xs">
@@ -570,20 +689,18 @@ export default function IssuesTrackerTab({
                 required
                 value={editingIssue.title}
                 onChange={(e) => setEditingIssue({ ...editingIssue, title: e.target.value })}
-                className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white"
+                className="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Tower</label>
-                <select
+                <DynamicSelect
+                  label="Tower / Location"
                   value={editingIssue.tower}
-                  onChange={(e) => setEditingIssue({ ...editingIssue, tower: e.target.value })}
-                  className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white"
-                >
-                  {towersList.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
+                  onChange={(val) => setEditingIssue({ ...editingIssue, tower: val })}
+                  options={defaultTowers}
+                />
               </div>
 
               <div>
@@ -593,44 +710,58 @@ export default function IssuesTrackerTab({
                   value={editingIssue.flat_no || ""}
                   onChange={(e) => setEditingIssue({ ...editingIssue, flat_no: e.target.value })}
                   placeholder="e.g. 402"
-                  className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Status</label>
-                <select
-                  value={editingIssue.status}
-                  onChange={(e) => setEditingIssue({ ...editingIssue, status: e.target.value })}
-                  className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white"
-                >
-                  {statuses.filter(s => s !== "All").map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+                <DynamicSelect
+                  label="Category"
+                  value={editingIssue.category}
+                  onChange={(val) => setEditingIssue({ ...editingIssue, category: val })}
+                  options={defaultCategories}
+                />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Priority</label>
-                <select
+                <DynamicSelect
+                  label="Priority"
                   value={editingIssue.priority}
-                  onChange={(e) => setEditingIssue({ ...editingIssue, priority: e.target.value })}
-                  className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white"
-                >
-                  {priorities.filter(p => p !== "All").map(p => <option key={p} value={p}>{p}</option>)}
-                </select>
+                  onChange={(val) => setEditingIssue({ ...editingIssue, priority: val })}
+                  options={defaultPriorities}
+                />
               </div>
             </div>
 
-            <div>
-              <label className="block text-slate-300 font-semibold mb-1">Assigned Vendor / Technician</label>
-              <input
-                type="text"
-                value={editingIssue.assigned_to}
-                onChange={(e) => setEditingIssue({ ...editingIssue, assigned_to: e.target.value })}
-                className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <DynamicSelect
+                  label="Status"
+                  value={editingIssue.status}
+                  onChange={(val) => setEditingIssue({ ...editingIssue, status: val })}
+                  options={defaultStatuses}
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Assigned Vendor / Technician</label>
+                <input
+                  type="text"
+                  value={editingIssue.assigned_to}
+                  onChange={(e) => setEditingIssue({ ...editingIssue, assigned_to: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                />
+              </div>
             </div>
+
+            {/* Photo / Document Upload */}
+            <FileUploadInput
+              label="Attachment / Photo Proof"
+              value={editingIssue.attachment_url}
+              onChange={(dataUrl) => setEditingIssue({ ...editingIssue, attachment_url: dataUrl })}
+            />
 
             <div>
               <label className="block text-slate-300 font-semibold mb-1">Resolution Update / Work Done</label>
@@ -639,7 +770,7 @@ export default function IssuesTrackerTab({
                 value={editingIssue.resolution_notes || ""}
                 onChange={(e) => setEditingIssue({ ...editingIssue, resolution_notes: e.target.value })}
                 placeholder="Details on repairs performed, replacement parts installed..."
-                className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white"
+                className="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
               />
             </div>
 
@@ -680,20 +811,19 @@ export default function IssuesTrackerTab({
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="e.g., Basement 2 water accumulation near pillar 42"
-              className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-rose-500"
+              className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-rose-500"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Tower / Location Tag *</label>
-              <select
+              <DynamicSelect
+                label="Tower / Location Tag"
+                required
                 value={formData.tower}
-                onChange={(e) => setFormData({ ...formData, tower: e.target.value })}
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-rose-500"
-              >
-                {towersList.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
+                onChange={(val) => setFormData({ ...formData, tower: val })}
+                options={defaultTowers}
+              />
             </div>
 
             <div>
@@ -703,39 +833,29 @@ export default function IssuesTrackerTab({
                 value={formData.flat_no || ""}
                 onChange={(e) => setFormData({ ...formData, flat_no: e.target.value })}
                 placeholder="e.g. 504 / Parking Bay 12"
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-rose-500"
+                className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Category *</label>
-              <select
+              <DynamicSelect
+                label="Category"
+                required
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-rose-500"
-              >
-                <option value="Civil & Seepage">Civil &amp; Seepage</option>
-                <option value="Electrical & Lift">Electrical &amp; Lift</option>
-                <option value="STP & Water Supply">STP &amp; Water Supply</option>
-                <option value="Security & Access">Security &amp; Access</option>
-                <option value="Landscaping & Pest">Landscaping &amp; Pest</option>
-                <option value="Common Amenities">Common Amenities</option>
-              </select>
+                onChange={(val) => setFormData({ ...formData, category: val })}
+                options={defaultCategories}
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Priority *</label>
-              <select
+              <DynamicSelect
+                label="Priority"
+                required
                 value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-rose-500"
-              >
-                <option value="Critical">Critical (Immediate Hazard)</option>
-                <option value="High">High (Major Inconvenience)</option>
-                <option value="Medium">Medium (Normal)</option>
-                <option value="Low">Low (Minor / Routine)</option>
-              </select>
+                onChange={(val) => setFormData({ ...formData, priority: val })}
+                options={defaultPriorities}
+              />
             </div>
           </div>
 
@@ -748,7 +868,7 @@ export default function IssuesTrackerTab({
                 value={formData.reported_by}
                 onChange={(e) => setFormData({ ...formData, reported_by: e.target.value })}
                 placeholder="e.g., Rajesh S. (Flat B-404)"
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-rose-500"
+                className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white"
               />
             </div>
             <div>
@@ -758,10 +878,17 @@ export default function IssuesTrackerTab({
                 value={formData.assigned_to}
                 onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
                 placeholder="e.g., Builder Civil Cell / IGS Plumbing"
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-rose-500"
+                className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white"
               />
             </div>
           </div>
+
+          {/* Photo / Bill Upload */}
+          <FileUploadInput
+            label="Upload Defect Photo / Bill (Optional)"
+            value={formData.attachment_url}
+            onChange={(dataUrl) => setFormData({ ...formData, attachment_url: dataUrl })}
+          />
 
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1">Detailed Description</label>
@@ -770,7 +897,7 @@ export default function IssuesTrackerTab({
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Describe symptoms, frequency, and damage if any..."
-              className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-rose-500"
+              className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white"
             />
           </div>
 
@@ -787,7 +914,7 @@ export default function IssuesTrackerTab({
               disabled={isSubmitting}
               className="px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 rounded-xl shadow-md transition disabled:opacity-50"
             >
-              {isSubmitting ? "Submitting..." : "Log Issue Ticket"}
+              {isSubmitting ? "Submitting..." : "Log Issue Ticket in Database"}
             </button>
           </div>
         </form>

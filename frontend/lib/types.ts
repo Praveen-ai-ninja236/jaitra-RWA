@@ -5,7 +5,7 @@ export interface FestivalCollection {
   flat_no: string;
   donor_name: string;
   amount: number;
-  payment_mode: string;
+  payment_mode: string; // UPI | Cash | Cheque | Net Banking | Card | Other
   transaction_ref?: string;
   collected_date: string;
   receipt_url?: string;
@@ -27,6 +27,8 @@ export interface FestivalExpense {
   approver_name: string;
   approver_role?: string;
   approval_status: "Approved" | "Pending" | "Rejected" | string;
+  payment_mode?: string; // UPI | Cash | Cheque | Net Banking | Card
+  transaction_ref?: string;
 }
 
 export type FestivalExpenseCreate = Omit<FestivalExpense, "id" | "festival_id">;
@@ -49,7 +51,6 @@ export interface FestivalCelebration {
 
 export type FestivalCelebrationCreate = Omit<FestivalCelebration, "id" | "collections" | "expenses">;
 
-
 export interface CulturalParticipant {
   id: number;
   event_id: number;
@@ -57,7 +58,7 @@ export interface CulturalParticipant {
   flat_no: string;
   participant_name: string;
   age_group: string;
-  activity_category: string; // Singing, Solo Dance, Group Dance, Games / Sports, Kids Workshop, Speaker / Debate, Drama
+  activity_category: string;
   contact_no?: string;
   notes?: string;
   registration_date: string;
@@ -96,7 +97,6 @@ export interface CulturalEvent {
 
 export type CulturalEventCreate = Omit<CulturalEvent, "id" | "participants" | "agendas">;
 
-
 export interface GeneralBodyMeeting {
   id: number;
   meeting_title: string;
@@ -114,11 +114,10 @@ export interface GeneralBodyMeeting {
 
 export type GeneralBodyMeetingCreate = Omit<GeneralBodyMeeting, "id">;
 
-
 export interface CommunityIssue {
   id: number;
   issue_code?: string;
-  tower: "Tower A" | "Tower B" | "Tower C" | "Tower D" | "Tower E" | "Tower F" | "Clubhouse" | "Common Space" | string;
+  tower: string;
   flat_no?: string;
   flat_or_location: string;
   title: string;
@@ -130,10 +129,10 @@ export interface CommunityIssue {
   created_at: string;
   description?: string;
   resolution_notes?: string;
+  attachment_url?: string;
 }
 
 export type CommunityIssueCreate = Omit<CommunityIssue, "id">;
-
 
 export interface ADOComment {
   id: number;
@@ -162,7 +161,7 @@ export interface ADOTask {
   id: number;
   task_code: string;
   title: string;
-  assigned_to: "Builder" | "IGS" | "Association" | "Joint Taskforce" | string;
+  assigned_to: string;
   entity_type: "Builder" | "IGS" | string;
   category: string;
   status: "New" | "Active" | "Resolved" | "Closed" | string;
@@ -180,7 +179,6 @@ export interface ADOTask {
 
 export type ADOTaskCreate = Omit<ADOTask, "id" | "comments" | "attachments">;
 
-
 export interface TeamMember {
   id: number;
   name: string;
@@ -195,7 +193,6 @@ export interface TeamMember {
 }
 
 export type TeamMemberCreate = Omit<TeamMember, "id">;
-
 
 export interface SocietyStats {
   cultural_events_count: number;
@@ -212,4 +209,21 @@ export interface SocietyStats {
   tower_issue_counts?: Record<string, number>;
   society_name: string;
   total_towers: number;
+}
+
+export interface AuditTransaction {
+  id: string | number;
+  type: "Collection" | "Expense";
+  festival_or_event: string;
+  date: string;
+  category: string;
+  particulars: string;
+  payer_or_vendor: string;
+  tower_flat: string;
+  payment_mode: string;
+  transaction_ref: string;
+  amount: number;
+  status: string;
+  evidence_url?: string;
+  approver?: string;
 }

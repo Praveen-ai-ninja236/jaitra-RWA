@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { GeneralBodyMeeting, GeneralBodyMeetingCreate } from "../lib/types";
 import {
   FileText,
@@ -19,14 +19,18 @@ import {
   ChevronUp,
   Landmark,
   Edit3,
-  ExternalLink
+  ExternalLink,
+  Edit,
+  Paperclip,
 } from "lucide-react";
 import Modal from "./Modal";
+import DynamicSelect from "./DynamicSelect";
+import FileUploadInput from "./FileUploadInput";
 
 interface GeneralBodyMeetingsTabProps {
   meetings: GeneralBodyMeeting[];
   onAddMeeting: (meeting: GeneralBodyMeetingCreate) => Promise<void>;
-  onUpdateMeeting: (id: number, meeting: GeneralBodyMeetingCreate) => Promise<void>;
+  onUpdateMeeting: (id: number, meeting: Partial<GeneralBodyMeetingCreate>) => Promise<void>;
   onDeleteMeeting: (id: number) => Promise<void>;
   isLoading: boolean;
 }
@@ -57,20 +61,29 @@ export default function GeneralBodyMeetingsTab({
     resolutions_passed: "Resolution: Approved unanimously by attending members.",
     minutes_summary: "Minutes recorded and signed by General Secretary.",
     attendees_count: 150,
-    doc_link: "/docs/GBM_Minutes_Sample.pdf",
+    doc_link: "",
   });
 
-  const meetingTypes = ["All", "AGM", "EGM", "Quarterly GBM", "Special Committee"];
+  const defaultMeetingTypes = ["AGM", "EGM", "Quarterly GBM", "Special Committee", "MC Monthly"];
+  const defaultVenues = [
+    "Clubhouse Grand Banquet Hall",
+    "Clubhouse Studio 1",
+    "Amphitheatre",
+    "Zoom Hybrid Online",
+  ];
+  const defaultQuorumStatuses = ["Quorum Met (Full)", "Quorum Met (Partial)", "Quorum Pending", "Special Session"];
 
-  const filteredMeetings = meetings.filter((m) => {
-    const matchSearch =
-      m.meeting_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.key_agenda?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.resolutions_passed?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.minutes_summary?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchType = selectedType === "All" || m.meeting_type === selectedType;
-    return matchSearch && matchType;
-  });
+  const filteredMeetings = useMemo(() => {
+    return meetings.filter((m) => {
+      const matchSearch =
+        m.meeting_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.key_agenda?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.resolutions_passed?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.minutes_summary?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchType = selectedType === "All" || m.meeting_type === selectedType;
+      return matchSearch && matchType;
+    });
+  }, [meetings, searchTerm, selectedType]);
 
   const toggleExpand = (id: number) => {
     setExpandedMeetingId(expandedMeetingId === id ? null : id);
@@ -94,7 +107,7 @@ export default function GeneralBodyMeetingsTab({
         resolutions_passed: "Resolution: Approved unanimously by attending members.",
         minutes_summary: "Minutes recorded and signed by General Secretary.",
         attendees_count: 150,
-        doc_link: "/docs/GBM_Minutes_Sample.pdf",
+        doc_link: "",
       });
     } catch (err) {
       console.error(err);
@@ -108,19 +121,7 @@ export default function GeneralBodyMeetingsTab({
     if (!editingMeeting) return;
     setIsSubmitting(true);
     try {
-      await onUpdateMeeting(editingMeeting.id, {
-        meeting_title: editingMeeting.meeting_title,
-        meeting_type: editingMeeting.meeting_type,
-        meeting_date: editingMeeting.meeting_date,
-        time: editingMeeting.time,
-        venue: editingMeeting.venue,
-        quorum_status: editingMeeting.quorum_status,
-        key_agenda: editingMeeting.key_agenda,
-        resolutions_passed: editingMeeting.resolutions_passed,
-        minutes_summary: editingMeeting.minutes_summary,
-        attendees_count: editingMeeting.attendees_count,
-        doc_link: editingMeeting.doc_link,
-      });
+      await onUpdateMeeting(editingMeeting.id, editingMeeting);
       setEditingMeeting(null);
     } catch (err) {
       console.error(err);
@@ -136,7 +137,9 @@ export default function GeneralBodyMeetingsTab({
         <div>
           <div className="flex items-center gap-2.5">
             <div className="w-3 h-3 rounded-full bg-sky-500 shadow-[0_0_10px_rgba(14,165,233,0.8)]" />
-            <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">3. General Body Meetings (GBM)</h2>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+              3. General Body Meetings (GBM)
+            </h2>
           </div>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Official records, AGM/EGM minutes, passed resolutions, and resident quorum archives for Towers A-F.
@@ -172,8 +175,11 @@ export default function GeneralBodyMeetingsTab({
             onChange={(e) => setSelectedType(e.target.value)}
             className="bg-transparent font-bold text-white focus:outline-none cursor-pointer"
           >
-            {meetingTypes.map((t) => (
-              <option key={t} value={t} className="bg-slate-900 text-white">{t}</option>
+            <option value="All">All Types</option>
+            {defaultMeetingTypes.map((t) => (
+              <option key={t} value={t} className="bg-slate-900 text-white">
+                {t}
+              </option>
             ))}
           </select>
         </div>
@@ -256,7 +262,7 @@ export default function GeneralBodyMeetingsTab({
                       onClick={() => setEditingMeeting(m)}
                       className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-300 hover:text-white bg-sky-500/20 hover:bg-sky-500/30 px-3 py-1.5 rounded-lg border border-sky-400/40 transition"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
+                      <Edit className="w-3.5 h-3.5" />
                       <span>Edit Meeting</span>
                     </button>
 
@@ -269,7 +275,11 @@ export default function GeneralBodyMeetingsTab({
                     </button>
 
                     <button
-                      onClick={() => onDeleteMeeting(m.id)}
+                      onClick={() => {
+                        if (confirm(`Delete record for "${m.meeting_title}"?`)) {
+                          onDeleteMeeting(m.id);
+                        }
+                      }}
                       title="Delete Record"
                       className="text-slate-500 hover:text-rose-400 p-1.5 transition"
                     >
@@ -283,10 +293,17 @@ export default function GeneralBodyMeetingsTab({
                   <p className="line-clamp-1 italic text-slate-300">
                     &quot;{m.minutes_summary || "Official minutes approved by General Body."}&quot;
                   </p>
-                  <div className="flex items-center gap-1 text-[11px] font-bold text-sky-400 hover:text-sky-300 hover:underline cursor-pointer ml-3 shrink-0">
-                    <Download className="w-3 h-3" />
-                    <span>Download Signed PDF</span>
-                  </div>
+                  {m.doc_link && (
+                    <a
+                      href={m.doc_link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1 text-[11px] font-bold text-sky-400 hover:text-sky-300 hover:underline ml-3 shrink-0"
+                    >
+                      <Download className="w-3 h-3" />
+                      <span>Signed Minutes PDF</span>
+                    </a>
+                  )}
                 </div>
 
                 {/* Expanded Details Section */}
@@ -347,33 +364,29 @@ export default function GeneralBodyMeetingsTab({
                 type="text"
                 required
                 value={editingMeeting.meeting_title}
-                onChange={(e) => setEditingMeeting({ ...editingMeeting, meeting_title: e.target.value })}
-                className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white"
+                onChange={(e) =>
+                  setEditingMeeting({ ...editingMeeting, meeting_title: e.target.value })
+                }
+                className="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Meeting Type</label>
-                <select
+                <DynamicSelect
+                  label="Meeting Type"
                   value={editingMeeting.meeting_type}
-                  onChange={(e) => setEditingMeeting({ ...editingMeeting, meeting_type: e.target.value })}
-                  className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white"
-                >
-                  <option value="AGM">Annual General Meeting (AGM)</option>
-                  <option value="EGM">Extraordinary General Meeting (EGM)</option>
-                  <option value="Quarterly GBM">Quarterly GBM</option>
-                  <option value="Special Committee">Special Committee</option>
-                </select>
+                  onChange={(val) => setEditingMeeting({ ...editingMeeting, meeting_type: val })}
+                  options={defaultMeetingTypes}
+                />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Quorum Status</label>
-                <input
-                  type="text"
+                <DynamicSelect
+                  label="Quorum Status"
                   value={editingMeeting.quorum_status}
-                  onChange={(e) => setEditingMeeting({ ...editingMeeting, quorum_status: e.target.value })}
-                  className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white"
+                  onChange={(val) => setEditingMeeting({ ...editingMeeting, quorum_status: val })}
+                  options={defaultQuorumStatuses}
                 />
               </div>
             </div>
@@ -384,8 +397,10 @@ export default function GeneralBodyMeetingsTab({
                 <input
                   type="date"
                   value={editingMeeting.meeting_date}
-                  onChange={(e) => setEditingMeeting({ ...editingMeeting, meeting_date: e.target.value })}
-                  className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white"
+                  onChange={(e) =>
+                    setEditingMeeting({ ...editingMeeting, meeting_date: e.target.value })
+                  }
+                  className="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
                 />
               </div>
 
@@ -395,7 +410,7 @@ export default function GeneralBodyMeetingsTab({
                   type="text"
                   value={editingMeeting.time}
                   onChange={(e) => setEditingMeeting({ ...editingMeeting, time: e.target.value })}
-                  className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
                 />
               </div>
 
@@ -404,19 +419,42 @@ export default function GeneralBodyMeetingsTab({
                 <input
                   type="number"
                   value={editingMeeting.attendees_count}
-                  onChange={(e) => setEditingMeeting({ ...editingMeeting, attendees_count: parseInt(e.target.value) || 0 })}
-                  className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white font-mono"
+                  onChange={(e) =>
+                    setEditingMeeting({
+                      ...editingMeeting,
+                      attendees_count: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  className="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white font-mono"
                 />
               </div>
             </div>
+
+            <div>
+              <DynamicSelect
+                label="Venue Location"
+                value={editingMeeting.venue}
+                onChange={(val) => setEditingMeeting({ ...editingMeeting, venue: val })}
+                options={defaultVenues}
+              />
+            </div>
+
+            {/* Signed PDF / Minutes Upload */}
+            <FileUploadInput
+              label="Attach Signed Minutes / Resolution Document (PDF)"
+              value={editingMeeting.doc_link}
+              onChange={(dataUrl) => setEditingMeeting({ ...editingMeeting, doc_link: dataUrl })}
+            />
 
             <div>
               <label className="block text-slate-300 font-semibold mb-1">Key Agenda Items</label>
               <textarea
                 rows={3}
                 value={editingMeeting.key_agenda || ""}
-                onChange={(e) => setEditingMeeting({ ...editingMeeting, key_agenda: e.target.value })}
-                className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white"
+                onChange={(e) =>
+                  setEditingMeeting({ ...editingMeeting, key_agenda: e.target.value })
+                }
+                className="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
               />
             </div>
 
@@ -425,8 +463,10 @@ export default function GeneralBodyMeetingsTab({
               <textarea
                 rows={3}
                 value={editingMeeting.resolutions_passed || ""}
-                onChange={(e) => setEditingMeeting({ ...editingMeeting, resolutions_passed: e.target.value })}
-                className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white"
+                onChange={(e) =>
+                  setEditingMeeting({ ...editingMeeting, resolutions_passed: e.target.value })
+                }
+                className="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
               />
             </div>
 
@@ -435,8 +475,10 @@ export default function GeneralBodyMeetingsTab({
               <textarea
                 rows={2}
                 value={editingMeeting.minutes_summary || ""}
-                onChange={(e) => setEditingMeeting({ ...editingMeeting, minutes_summary: e.target.value })}
-                className="w-full p-2.5 rounded bg-slate-800 border border-slate-700 text-white"
+                onChange={(e) =>
+                  setEditingMeeting({ ...editingMeeting, minutes_summary: e.target.value })
+                }
+                className="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
               />
             </div>
 
@@ -477,33 +519,27 @@ export default function GeneralBodyMeetingsTab({
               value={formData.meeting_title}
               onChange={(e) => setFormData({ ...formData, meeting_title: e.target.value })}
               placeholder="e.g., 6th Annual General Body Meeting (AGM 2026)"
-              className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
+              className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Meeting Type *</label>
-              <select
+              <DynamicSelect
+                label="Meeting Type"
+                required
                 value={formData.meeting_type}
-                onChange={(e) => setFormData({ ...formData, meeting_type: e.target.value })}
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
-              >
-                <option value="AGM">Annual General Meeting (AGM)</option>
-                <option value="EGM">Extraordinary General Meeting (EGM)</option>
-                <option value="Quarterly GBM">Quarterly GBM</option>
-                <option value="Special Committee">Special Committee GBM</option>
-              </select>
+                onChange={(val) => setFormData({ ...formData, meeting_type: val })}
+                options={defaultMeetingTypes}
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Quorum Status *</label>
-              <input
-                type="text"
+              <DynamicSelect
+                label="Quorum Status"
                 required
                 value={formData.quorum_status}
-                onChange={(e) => setFormData({ ...formData, quorum_status: e.target.value })}
-                placeholder="e.g., Quorum Met (210 Owners)"
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
+                onChange={(val) => setFormData({ ...formData, quorum_status: val })}
+                options={defaultQuorumStatuses}
               />
             </div>
           </div>
@@ -516,7 +552,7 @@ export default function GeneralBodyMeetingsTab({
                 required
                 value={formData.meeting_date}
                 onChange={(e) => setFormData({ ...formData, meeting_date: e.target.value })}
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
+                className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
               />
             </div>
             <div>
@@ -526,7 +562,7 @@ export default function GeneralBodyMeetingsTab({
                 value={formData.time}
                 onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                 placeholder="10:00 AM - 01:00 PM"
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
+                className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
               />
             </div>
             <div>
@@ -534,23 +570,29 @@ export default function GeneralBodyMeetingsTab({
               <input
                 type="number"
                 value={formData.attendees_count}
-                onChange={(e) => setFormData({ ...formData, attendees_count: parseInt(e.target.value) || 0 })}
-                className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
+                onChange={(e) =>
+                  setFormData({ ...formData, attendees_count: parseInt(e.target.value) || 0 })
+                }
+                className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Venue Location</label>
-            <input
-              type="text"
-              required
+            <DynamicSelect
+              label="Venue Location"
               value={formData.venue}
-              onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-              placeholder="Clubhouse Grand Banquet Hall"
-              className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
+              onChange={(val) => setFormData({ ...formData, venue: val })}
+              options={defaultVenues}
             />
           </div>
+
+          {/* Signed PDF / Minutes Upload */}
+          <FileUploadInput
+            label="Upload Signed Minutes Document / Resolution PDF (Optional)"
+            value={formData.doc_link}
+            onChange={(dataUrl) => setFormData({ ...formData, doc_link: dataUrl })}
+          />
 
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1">Key Agenda Items</label>
@@ -559,7 +601,7 @@ export default function GeneralBodyMeetingsTab({
               value={formData.key_agenda}
               onChange={(e) => setFormData({ ...formData, key_agenda: e.target.value })}
               placeholder="1. Solar plant sanction\n2. Financial audit review\n3. Lift AMC agreement"
-              className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
+              className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
             />
           </div>
 
@@ -570,7 +612,7 @@ export default function GeneralBodyMeetingsTab({
               value={formData.resolutions_passed}
               onChange={(e) => setFormData({ ...formData, resolutions_passed: e.target.value })}
               placeholder="Record binding decisions approved during the meeting..."
-              className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
+              className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
             />
           </div>
 
@@ -581,7 +623,7 @@ export default function GeneralBodyMeetingsTab({
               value={formData.minutes_summary}
               onChange={(e) => setFormData({ ...formData, minutes_summary: e.target.value })}
               placeholder="Summary of discussions, voting results, and next actions..."
-              className="w-full text-xs p-2.5 border rounded-lg bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
+              className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-sky-500"
             />
           </div>
 
@@ -598,7 +640,7 @@ export default function GeneralBodyMeetingsTab({
               disabled={isSubmitting}
               className="px-5 py-2.5 text-xs font-bold text-white bg-sky-600 hover:bg-sky-500 rounded-xl shadow-md transition disabled:opacity-50"
             >
-              {isSubmitting ? "Saving..." : "Save GBM Record"}
+              {isSubmitting ? "Saving..." : "Save GBM Record in Live DB"}
             </button>
           </div>
         </form>
