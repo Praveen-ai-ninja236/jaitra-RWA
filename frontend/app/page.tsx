@@ -83,14 +83,10 @@ export default function JaitraPortal() {
   // Check stored auth session and sync hash from URL on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
+      // Clear any stale session — user must sign in fresh each visit
       try {
-        const storedUser = localStorage.getItem("jaitra_auth_user");
-        if (storedUser) {
-          setCurrentUser(JSON.parse(storedUser));
-        }
-      } catch (e) {
-        console.warn("Could not load stored auth user:", e);
-      }
+        localStorage.removeItem("jaitra_auth_user");
+      } catch (e) {}
 
       const hash = window.location.hash.replace("#", "");
       const publicTabs = ["culture-events", "gbm"];

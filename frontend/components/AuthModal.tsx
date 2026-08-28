@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   Lock,
@@ -53,6 +53,25 @@ export default function AuthModal({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  // Reset all form state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setTab("signin");
+      setSignInEmail("");
+      setSignInPassword("");
+      setName("");
+      setEmail("");
+      setPassword("");
+      setRole("User");
+      setTower("Tower A");
+      setFlatNo("");
+      setPhone("");
+      setErrorMessage("");
+      setSuccessMessage("");
+      setIsLoading(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
