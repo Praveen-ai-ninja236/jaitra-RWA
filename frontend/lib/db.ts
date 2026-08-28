@@ -1345,4 +1345,67 @@ export async function deleteVendorContract(id: number): Promise<void> {
   await runQuery("DELETE FROM vendor_contracts WHERE id = $1", [id]);
 }
 
+// ----------------- AUDIT LOG -----------------
+
+export async function ensureAuditLogTable(): Promise<void> {
+  await runQuery(`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id SERIAL PRIMARY KEY,
+      user_name TEXT NOT NULL DEFAULT '',
+      user_role TEXT NOT NULL DEFAULT '',
+      action TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      entity_id INTEGER,
+      entity_label TEXT NOT NULL DEFAULT '',
+      details TEXT NOT NULL DEFAULT '',
+      ip_address TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+}
+
+export async function insertAuditLog(entry: {
+  user_name?: string;
+  user_role?: string;
+  action: string;
+  entity_type: string;
+  entity_id?: number | null;
+  entity_label?: string;
+  details?: string;
+  ip_address?: string;
+}): Promise<void> {
+  try {
+    await ensureAuditLogTable();
+    await runQuery(
+      `INSERT INTO audit_log (user_name, user_role, action, entity_type, entity_id, entity_label, details, ip_address)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        entry.user_name || "",
+        entry.user_role || "",
+        entry.action,
+        entry.entity_type,
+        entry.entity_id || null,
+        entry.entity_label || "",
+        entry.details || "",
+        entry.ip_address || "",
+      ]
+    );
+  } catch (err) {
+    console.error("Audit log insert failed:", err);
+  }
+}
+
+export async function getAuditLogs(limit = 200): Promise<any[]> {
+  try {
+    await ensureAuditLogTable();
+    return await runQuery(
+      `SELECT * FROM audit_log ORDER BY created_at DESC LIMIT $1`,
+      [limit]
+    );
+  } catch (err) {
+    console.error("getAuditLogs error:", err);
+    return [];
+  }
+}
+
 

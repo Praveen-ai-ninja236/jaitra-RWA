@@ -287,3 +287,18 @@ export interface AuditTransaction {
   evidence_url?: string;
   approver?: string;
 }
+
+export interface AuditLogEntry {
+  id: number;
+  user_name: string;
+  user_role: string;
+  action: "CREATE" | "UPDATE" | "DELETE";
+  entity_type: string;
+  entity_id: number | null;
+  entity_label: string;
+  details: string;
+  ip_address: string;
+  created_at: string;
+}
+
+export type AuditLogEntryCreate = Omit<AuditLogEntry, "id" | "created_at">;

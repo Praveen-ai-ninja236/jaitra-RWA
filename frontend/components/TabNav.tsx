@@ -9,6 +9,7 @@ import {
   Kanban,
   Users,
   Briefcase,
+  History,
 } from "lucide-react";
 import { AppUser } from "../lib/types";
 
@@ -115,6 +116,16 @@ export default function TabNav({ activeTab, onTabChange, badgeCounts, currentUse
       badgeColor: "bg-teal-900/80 text-teal-200 border border-teal-700",
       activeBorderColor: "from-teal-600 to-teal-400",
       activeGlow: "shadow-teal-500/20",
+      authRequired: true,
+    },
+    {
+      id: "change-history",
+      label: "8. Change History",
+      shortLabel: "History",
+      icon: History,
+      badgeColor: "bg-violet-900/80 text-violet-200 border border-violet-700",
+      activeBorderColor: "from-violet-600 to-violet-400",
+      activeGlow: "shadow-violet-500/20",
       authRequired: true,
     },
   ];

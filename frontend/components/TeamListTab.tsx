@@ -426,10 +426,20 @@ export default function TeamListTab({
         {/* Right Side: Quick Add Form (Super Admin Only) or Directory Info */}
         <div className="bg-slate-900/90 p-5 rounded-2xl shadow-xl border border-slate-800">
           {canEditTeam ? (
+            isAddModalOpen ? (
             <>
-              <div className="flex items-center gap-2 pb-3 mb-4 border-b border-slate-800">
-                <UserPlus className="w-4 h-4 text-emerald-400" />
-                <h3 className="text-sm font-extrabold text-white">Add Association Member</h3>
+              <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+                <div className="flex items-center gap-2">
+                  <UserPlus className="w-4 h-4 text-emerald-400" />
+                  <h3 className="text-sm font-extrabold text-white">Add Association Member</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="text-slate-400 hover:text-white text-xs font-bold px-2 py-1 bg-slate-800 rounded-lg"
+                >
+                  Close
+                </button>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-3.5">
@@ -545,6 +555,12 @@ export default function TeamListTab({
                 </button>
               </form>
             </>
+          ) : (
+            <div className="text-center py-6">
+              <UserPlus className="w-8 h-8 text-emerald-500/50 mx-auto mb-2" />
+              <p className="text-xs text-slate-400">Click &quot;Add Committee Member&quot; above to add a new member.</p>
+            </div>
+          )
           ) : (
             <div className="space-y-4 text-xs">
               <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
