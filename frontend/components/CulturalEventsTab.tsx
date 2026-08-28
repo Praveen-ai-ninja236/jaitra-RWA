@@ -427,16 +427,13 @@ export default function CulturalEventsTab({
                   {/* Title & Description */}
                   <h3
                     onClick={() => {
-                      if (isGuest) return;
                       setActiveEventDetail(event);
                       setDetailTab("participants");
                     }}
-                    className={`text-lg sm:text-xl font-extrabold text-white leading-snug transition flex items-center justify-between ${
-                      isGuest ? "cursor-default" : "cursor-pointer group-hover:text-indigo-200"
-                    }`}
+                    className={`text-lg sm:text-xl font-extrabold text-white leading-snug transition flex items-center justify-between cursor-pointer group-hover:text-indigo-200`}
                   >
                     <span>{event.title}</span>
-                    {!isGuest && <ChevronRight className="w-5 h-5 text-indigo-400 opacity-80 group-hover:translate-x-1 transition" />}
+                    <ChevronRight className="w-5 h-5 text-indigo-400 opacity-80 group-hover:translate-x-1 transition" />
                   </h3>
                   <p className="text-xs text-slate-300 mt-2.5 leading-relaxed font-normal">
                     {event.description}
@@ -485,20 +482,16 @@ export default function CulturalEventsTab({
                     <span className="text-slate-400 text-[11px]">Enrolled Participants</span>
                   </div>
 
-                  {isGuest ? (
-                    <span className="text-[11px] text-slate-500 italic">Sign in to view details</span>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setActiveEventDetail(event);
-                        setDetailTab("participants");
-                      }}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-300 hover:text-white bg-indigo-500/20 hover:bg-indigo-500/30 px-3.5 py-1.5 rounded-xl border border-indigo-400/40 transition shadow-sm"
-                    >
-                      <UserPlus className="w-3.5 h-3.5 text-indigo-400" />
-                      <span>View / Manage Participants</span>
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      setActiveEventDetail(event);
+                      setDetailTab("participants");
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-300 hover:text-white bg-indigo-500/20 hover:bg-indigo-500/30 px-3.5 py-1.5 rounded-xl border border-indigo-400/40 transition shadow-sm"
+                  >
+                    <UserPlus className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>{isGuest ? "View Details" : "View / Manage Participants"}</span>
+                  </button>
                 </div>
               </div>
             );
@@ -512,7 +505,7 @@ export default function CulturalEventsTab({
           isOpen={Boolean(currentEvent)}
           onClose={() => setActiveEventDetail(null)}
           title={`${currentEvent.title} — Event Manager`}
-          subtitle="View / Edit Details, Tower-wise Participants & Speaker Agendas"
+          subtitle={isGuest ? "View-only mode — sign in to manage participants & agendas" : "View / Edit Details, Tower-wise Participants & Speaker Agendas"}
           maxWidth="2xl"
         >
           <div className="space-y-5">

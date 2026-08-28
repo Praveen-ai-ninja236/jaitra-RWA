@@ -53,6 +53,7 @@ export default function GeneralBodyMeetingsTab({
   const [selectedType, setSelectedType] = useState("All");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingMeeting, setEditingMeeting] = useState<GeneralBodyMeeting | null>(null);
+  const [viewingMeeting, setViewingMeeting] = useState<GeneralBodyMeeting | null>(null);
   const [expandedMeetingId, setExpandedMeetingId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -239,12 +240,13 @@ export default function GeneralBodyMeetingsTab({
 
                     <h3
                       onClick={() => {
-                        if (isGuest) return;
-                        setEditingMeeting(m);
+                        if (isGuest) {
+                          setViewingMeeting(m);
+                        } else {
+                          setEditingMeeting(m);
+                        }
                       }}
-                      className={`text-lg sm:text-xl font-extrabold text-white leading-snug transition ${
-                        isGuest ? "cursor-default" : "cursor-pointer hover:text-sky-300"
-                      }`}
+                      className="text-lg sm:text-xl font-extrabold text-white leading-snug transition cursor-pointer hover:text-sky-300"
                     >
                       {m.meeting_title}
                     </h3>
@@ -277,17 +279,13 @@ export default function GeneralBodyMeetingsTab({
                       </button>
                     )}
 
-                    {isGuest ? (
-                      <span className="text-[11px] text-slate-500 italic px-2">Sign in to view details</span>
-                    ) : (
-                      <button
-                        onClick={() => toggleExpand(m.id)}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 transition"
-                      >
-                        <span>{isExpanded ? "Hide" : "Details"}</span>
-                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                      </button>
-                    )}
+                    <button
+                      onClick={() => toggleExpand(m.id)}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 transition"
+                    >
+                      <span>{isExpanded ? "Hide" : "Details"}</span>
+                      {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    </button>
 
                     {canEdit && (
                       <button
@@ -662,6 +660,75 @@ export default function GeneralBodyMeetingsTab({
           </div>
         </form>
       </Modal>
+
+      {/* Read-Only Detail Modal for Guests */}
+      {viewingMeeting && (
+        <Modal
+          isOpen={Boolean(viewingMeeting)}
+          onClose={() => setViewingMeeting(null)}
+          title={viewingMeeting.meeting_title}
+          subtitle="View-only mode — sign in to edit meeting records"
+          maxWidth="xl"
+        >
+          <div className="space-y-4 text-xs">
+            <div className="grid grid-cols-2 gap-3 p-3 bg-slate-950/60 rounded-xl border border-slate-800">
+              <div>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase">Meeting Type</span>
+                <p className="text-sm font-bold text-white mt-0.5">{viewingMeeting.meeting_type}</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase">Date</span>
+                <p className="text-sm font-bold text-white mt-0.5">{viewingMeeting.meeting_date}</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase">Time</span>
+                <p className="text-sm font-bold text-white mt-0.5">{viewingMeeting.time}</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase">Venue</span>
+                <p className="text-sm font-bold text-white mt-0.5">{viewingMeeting.venue}</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase">Quorum Status</span>
+                <p className="text-sm font-bold text-white mt-0.5">{viewingMeeting.quorum_status}</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase">Attendees</span>
+                <p className="text-sm font-bold text-white mt-0.5">{viewingMeeting.attendees_count} Members</p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase">Key Agenda</span>
+              <p className="text-xs text-slate-200 mt-1 whitespace-pre-wrap leading-relaxed">{viewingMeeting.key_agenda}</p>
+            </div>
+
+            <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase">Resolutions Passed</span>
+              <p className="text-xs text-slate-200 mt-1 whitespace-pre-wrap leading-relaxed">{viewingMeeting.resolutions_passed}</p>
+            </div>
+
+            <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase">Minutes Summary</span>
+              <p className="text-xs text-slate-200 mt-1 whitespace-pre-wrap leading-relaxed">{viewingMeeting.minutes_summary}</p>
+            </div>
+
+            {viewingMeeting.doc_link && (
+              <div className="p-3 bg-sky-950/40 rounded-xl border border-sky-800/50">
+                <span className="text-[10px] font-semibold text-sky-400 uppercase">Attached Document</span>
+                <a
+                  href={viewingMeeting.doc_link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-sky-300 hover:text-sky-200 underline mt-1 inline-block"
+                >
+                  Open Document
+                </a>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
