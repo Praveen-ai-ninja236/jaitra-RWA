@@ -62,13 +62,51 @@ export default function TeamListTab({
 
   const defaultTowers = ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F"];
 
+  const ROLE_SORT_ORDER: string[] = [
+    "Chairman",
+    "Vice-chairman",
+    "Vice Chairman",
+    "General Secretary",
+    "Joint Secretary",
+    "Treasurer",
+    "Director - A",
+    "Director - B",
+    "Director - C",
+    "Director - D",
+    "Director - E",
+    "Director - F",
+    "Jaitra MD",
+    "Jaitra Director 1",
+    "Jaitra Director 2",
+    "Jaitra CRM 1",
+    "Jaitra CRM 2",
+    "Jaitra Engineer 1",
+    "Jaitra Engineer 2",
+  ];
+
   const defaultRoles = [
+    "Chairman",
+    "Vice-chairman",
+    "Vice Chairman",
     "President",
     "Vice President",
     "General Secretary",
     "Joint Secretary",
     "Treasurer",
     "Joint Treasurer",
+    "Director - A",
+    "Director - B",
+    "Director - C",
+    "Director - D",
+    "Director - E",
+    "Director - F",
+    "Jaitra MD",
+    "Jaitra Director 1",
+    "Jaitra Director 2",
+    "Jaitra CRM 1",
+    "Jaitra CRM 2",
+    "Jaitra Engineer 1",
+    "Jaitra Engineer 2",
     "Cultural Committee Head",
     "Sports & Amenities Head",
     "Facility & Maintenance Lead",
@@ -95,24 +133,33 @@ export default function TeamListTab({
     "Resident Welfare & Elevators",
   ];
 
+  const getRoleSortIndex = (role: string): number => {
+    const idx = ROLE_SORT_ORDER.findIndex(
+      (r) => r.toLowerCase() === role.toLowerCase()
+    );
+    return idx === -1 ? ROLE_SORT_ORDER.length : idx;
+  };
+
   const filteredTeam = useMemo(() => {
-    return team.filter((m) => {
-      const matchSearch =
-        m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (m.wing_flat && m.wing_flat.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        m.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (m.sub_committee && m.sub_committee.toLowerCase().includes(searchTerm.toLowerCase()));
-      const matchTower =
-        selectedTower === "All" ||
-        m.tower === selectedTower ||
-        (m.wing_flat && m.wing_flat.includes(selectedTower));
-      const matchSub =
-        selectedSubCommittee === "All" ||
-        (m.sub_committee &&
-          m.sub_committee.toLowerCase().includes(selectedSubCommittee.toLowerCase()));
-      return matchSearch && matchTower && matchSub;
-    });
+    return team
+      .filter((m) => {
+        const matchSearch =
+          m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          m.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (m.wing_flat && m.wing_flat.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          m.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (m.sub_committee && m.sub_committee.toLowerCase().includes(searchTerm.toLowerCase()));
+        const matchTower =
+          selectedTower === "All" ||
+          m.tower === selectedTower ||
+          (m.wing_flat && m.wing_flat.includes(selectedTower));
+        const matchSub =
+          selectedSubCommittee === "All" ||
+          (m.sub_committee &&
+            m.sub_committee.toLowerCase().includes(selectedSubCommittee.toLowerCase()));
+        return matchSearch && matchTower && matchSub;
+      })
+      .sort((a, b) => getRoleSortIndex(a.role) - getRoleSortIndex(b.role));
   }, [team, searchTerm, selectedTower, selectedSubCommittee]);
 
   const handleSubmit = async (e: React.FormEvent) => {
