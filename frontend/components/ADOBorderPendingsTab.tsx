@@ -8,6 +8,7 @@ import {
   ADOAttachmentCreate,
   UserRole,
   DropdownCategoryMap,
+  TeamMember,
 } from "../lib/types";
 import {
   Kanban,
@@ -56,6 +57,7 @@ interface ADOBorderPendingsTabProps {
   isLoading: boolean;
   userRole?: UserRole;
   dropdownMap?: DropdownCategoryMap;
+  teamMembers?: TeamMember[];
 }
 
 export default function ADOBorderPendingsTab({
@@ -70,8 +72,10 @@ export default function ADOBorderPendingsTab({
   isLoading,
   userRole = "Super Admin",
   dropdownMap = {},
+  teamMembers = [],
 }: ADOBorderPendingsTabProps) {
   const canEdit = userRole === "Super Admin" || userRole === "Admin";
+  const teamMemberNames = teamMembers.map((m) => m.name).filter(Boolean);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEntity, setSelectedEntity] = useState<string>("All");
   const [selectedPriority, setSelectedPriority] = useState("All");
@@ -884,11 +888,10 @@ export default function ADOBorderPendingsTab({
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <label className="block text-[10px] font-semibold text-slate-400 mb-1">Your Name</label>
-                      <input
-                        type="text"
+                      <DynamicSelect
                         value={commentAuthor}
-                        onChange={(e) => setCommentAuthor(e.target.value)}
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        onChange={setCommentAuthor}
+                        options={teamMemberNames.length ? teamMemberNames : ["Vikram Patel", "Rajesh Sharma", "Karthik Venkatesh"]}
                       />
                     </div>
                     <div>
@@ -1126,13 +1129,11 @@ export default function ADOBorderPendingsTab({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Assigned Engineer / POC</label>
-              <input
-                type="text"
-                value={formData.assignee_name}
-                onChange={(e) => setFormData({ ...formData, assignee_name: e.target.value })}
-                placeholder="e.g., Er. K. Verma / Suresh R."
-                className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white"
+              <DynamicSelect
+                label="Assignee Name"
+                value={formData.assignee_name || ""}
+                onChange={(val) => setFormData({ ...formData, assignee_name: val })}
+                options={teamMemberNames.length ? teamMemberNames : ["Er. K. Verma", "Mr. D. Srinivasan", "Mr. Suresh R.", "Kishore N."]}
               />
             </div>
 
@@ -1274,12 +1275,11 @@ export default function ADOBorderPendingsTab({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Assigned POC</label>
-                <input
-                  type="text"
+                <DynamicSelect
+                  label="Assignee Name"
                   value={editingTask.assignee_name || ""}
-                  onChange={(e) => setEditingTask({ ...editingTask, assignee_name: e.target.value })}
-                  className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white"
+                  onChange={(val) => setEditingTask({ ...editingTask, assignee_name: val })}
+                  options={teamMemberNames.length ? teamMemberNames : ["Er. K. Verma", "Mr. D. Srinivasan", "Mr. Suresh R.", "Kishore N."]}
                 />
               </div>
 

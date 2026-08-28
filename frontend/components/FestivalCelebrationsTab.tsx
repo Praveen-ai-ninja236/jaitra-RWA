@@ -10,6 +10,7 @@ import {
   FestivalExpenseCreate,
   UserRole,
   DropdownCategoryMap,
+  TeamMember,
 } from "../lib/types";
 import {
   Sparkles,
@@ -60,6 +61,7 @@ interface FestivalCelebrationsTabProps {
   userRole?: UserRole;
   isGuest?: boolean;
   dropdownMap?: DropdownCategoryMap;
+  teamMembers?: TeamMember[];
 }
 
 export default function FestivalCelebrationsTab({
@@ -79,7 +81,9 @@ export default function FestivalCelebrationsTab({
   userRole = "Super Admin",
   isGuest = false,
   dropdownMap = {},
+  teamMembers = [],
 }: FestivalCelebrationsTabProps) {
+  const teamMemberNames = teamMembers.map((m) => m.name).filter(Boolean);
   const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
@@ -1013,13 +1017,11 @@ export default function FestivalCelebrationsTab({
 
                     <div className="grid grid-cols-2 gap-2.5">
                       <div>
-                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Designated Approver</label>
-                        <input
-                          type="text"
+                        <DynamicSelect
+                          label="Designated Approver"
                           value={expData.approver_name}
-                          onChange={(e) => setExpData({ ...expData, approver_name: e.target.value })}
-                          placeholder="Vikram Patel (Treasurer)"
-                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                          onChange={(val) => setExpData({ ...expData, approver_name: val })}
+                          options={teamMemberNames.length ? teamMemberNames : ["Vikram Patel", "Rajesh Sharma", "Ananya Roy"]}
                         />
                       </div>
 
@@ -1622,14 +1624,11 @@ export default function FestivalCelebrationsTab({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Approver Name</label>
-                <input
-                  type="text"
+                <DynamicSelect
+                  label="Designated Approver"
                   value={editingExpense.approver_name}
-                  onChange={(e) =>
-                    setEditingExpense({ ...editingExpense, approver_name: e.target.value })
-                  }
-                  className="w-full text-xs p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                  onChange={(val) => setEditingExpense({ ...editingExpense, approver_name: val })}
+                  options={teamMemberNames.length ? teamMemberNames : ["Vikram Patel", "Rajesh Sharma", "Ananya Roy"]}
                 />
               </div>
             </div>

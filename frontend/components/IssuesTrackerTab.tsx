@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { CommunityIssue, CommunityIssueCreate, UserRole, DropdownCategoryMap } from "../lib/types";
+import { CommunityIssue, CommunityIssueCreate, UserRole, DropdownCategoryMap, TeamMember } from "../lib/types";
 import {
   AlertTriangle,
   AlertCircle,
@@ -40,6 +40,7 @@ interface IssuesTrackerTabProps {
   isLoading: boolean;
   userRole?: UserRole;
   dropdownMap?: DropdownCategoryMap;
+  teamMembers?: TeamMember[];
 }
 
 export default function IssuesTrackerTab({
@@ -50,7 +51,9 @@ export default function IssuesTrackerTab({
   isLoading,
   userRole = "Super Admin",
   dropdownMap = {},
+  teamMembers = [],
 }: IssuesTrackerTabProps) {
+  const teamMemberNames = teamMembers.map((m) => m.name).filter(Boolean);
   const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTowerFilter, setSelectedTowerFilter] = useState("All");
@@ -823,12 +826,11 @@ export default function IssuesTrackerTab({
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Assigned Vendor / Technician</label>
-                <input
-                  type="text"
+                <DynamicSelect
+                  label="Assigned To"
                   value={editingIssue.assigned_to}
-                  onChange={(e) => setEditingIssue({ ...editingIssue, assigned_to: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                  onChange={(val) => setEditingIssue({ ...editingIssue, assigned_to: val })}
+                  options={teamMemberNames.length ? teamMemberNames : ["Karthik Venkatesh", "Facility Maintenance Cell", "IGS Security Desk"]}
                 />
               </div>
             </div>
@@ -949,13 +951,11 @@ export default function IssuesTrackerTab({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Assigned Vendor / Cell</label>
-              <input
-                type="text"
+              <DynamicSelect
+                label="Assigned To"
                 value={formData.assigned_to}
-                onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
-                placeholder="e.g., Builder Civil Cell / IGS Plumbing"
-                className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white"
+                onChange={(val) => setFormData({ ...formData, assigned_to: val })}
+                options={teamMemberNames.length ? teamMemberNames : ["Karthik Venkatesh", "Facility Maintenance Cell", "IGS Security Desk"]}
               />
             </div>
           </div>

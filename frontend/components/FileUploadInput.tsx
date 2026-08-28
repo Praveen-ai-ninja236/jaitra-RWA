@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { UploadCloud, FileText, CheckCircle2, AlertCircle, Trash2, Eye, ExternalLink } from "lucide-react";
 
 interface FileUploadInputProps {
@@ -16,7 +16,7 @@ export default function FileUploadInput({
   value = "",
   onChange,
   required = false,
-  helpText = "Upload PDF, PNG, JPG, or Invoice receipts (Max 5MB)",
+  helpText = "Upload PDF, JPEG, PNG, or Invoice receipts (Max 5MB)",
 }: FileUploadInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string>("");
@@ -24,6 +24,18 @@ export default function FileUploadInput({
   const [uploadStatus, setUploadStatus] = useState<"idle" | "success" | "error">("idle");
   const [statusMessage, setStatusMessage] = useState<string>("");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  useEffect(() => {
+    if (!value) {
+      setFileName("");
+      setFileSize("");
+      setUploadStatus("idle");
+      setStatusMessage("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }, [value]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -89,7 +101,7 @@ export default function FileUploadInput({
           type="file"
           ref={fileInputRef}
           onChange={handleFileChange}
-          accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+          accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp,.doc,.docx,.xls,.xlsx"
           className="hidden"
         />
 

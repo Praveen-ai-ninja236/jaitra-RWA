@@ -10,6 +10,7 @@ import {
   CulturalAgendaCreate,
   UserRole,
   DropdownCategoryMap,
+  TeamMember,
 } from "../lib/types";
 import {
   Calendar,
@@ -54,6 +55,7 @@ interface CulturalEventsTabProps {
   userRole?: UserRole;
   isGuest?: boolean;
   dropdownMap?: DropdownCategoryMap;
+  teamMembers?: TeamMember[];
 }
 
 export default function CulturalEventsTab({
@@ -71,7 +73,9 @@ export default function CulturalEventsTab({
   userRole = "Super Admin",
   isGuest = false,
   dropdownMap = {},
+  teamMembers = [],
 }: CulturalEventsTabProps) {
+  const teamMemberNames = teamMembers.map((m) => m.name).filter(Boolean);
   const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -978,14 +982,11 @@ export default function CulturalEventsTab({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Coordinator Name *</label>
-              <input
-                type="text"
-                required
+              <DynamicSelect
+                label="Coordinator"
                 value={formData.coordinator}
-                onChange={(e) => setFormData({ ...formData, coordinator: e.target.value })}
-                placeholder="e.g., Vivek Murthy"
-                className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-indigo-500"
+                onChange={(val) => setFormData({ ...formData, coordinator: val })}
+                options={teamMemberNames.length ? teamMemberNames : ["Dr. Swati Sen", "Vivek Murthy", "Rajesh Sharma"]}
               />
             </div>
             <div>
@@ -1118,12 +1119,11 @@ export default function CulturalEventsTab({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Coordinator</label>
-                <input
-                  type="text"
+                <DynamicSelect
+                  label="Coordinator"
                   value={editingEvent.coordinator}
-                  onChange={(e) => setEditingEvent({ ...editingEvent, coordinator: e.target.value })}
-                  className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white"
+                  onChange={(val) => setEditingEvent({ ...editingEvent, coordinator: val })}
+                  options={teamMemberNames.length ? teamMemberNames : ["Dr. Swati Sen", "Vivek Murthy", "Rajesh Sharma"]}
                 />
               </div>
               <div>

@@ -82,16 +82,20 @@ export default function JaitraPortal() {
     }, 4000);
   };
 
-  // Check stored auth session and sync hash from URL on mount
+  // Restore session from localStorage and sync hash from URL on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // Clear any stale session — user must sign in fresh each visit
       try {
-        localStorage.removeItem("jaitra_auth_user");
+        const stored = localStorage.getItem("jaitra_auth_user");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.email) {
+            setCurrentUser(parsed);
+          }
+        }
       } catch (e) {}
 
       const hash = window.location.hash.replace("#", "");
-      const publicTabs = ["culture-events", "gbm"];
       const allTabs = ["culture-events", "festivals", "gbm", "issues", "ado-board", "team", "vendor-management"];
       if (allTabs.includes(hash)) {
         setActiveTab(hash);
@@ -665,6 +669,7 @@ export default function JaitraPortal() {
             userRole={currentUser?.role || "User"}
             isGuest={!currentUser}
             dropdownMap={dropdownMap}
+            teamMembers={teamMembers}
           />
         )}
 
@@ -686,6 +691,7 @@ export default function JaitraPortal() {
             userRole={currentUser?.role || "User"}
             isGuest={!currentUser}
             dropdownMap={dropdownMap}
+            teamMembers={teamMembers}
           />
         )}
 
@@ -711,6 +717,7 @@ export default function JaitraPortal() {
             isLoading={isLoading}
             userRole={currentUser?.role || "User"}
             dropdownMap={dropdownMap}
+            teamMembers={teamMembers}
           />
         )}
 
@@ -727,6 +734,7 @@ export default function JaitraPortal() {
             isLoading={isLoading}
             userRole={currentUser?.role || "User"}
             dropdownMap={dropdownMap}
+            teamMembers={teamMembers}
           />
         )}
 
