@@ -34,6 +34,7 @@ interface GeneralBodyMeetingsTabProps {
   onDeleteMeeting: (id: number) => Promise<void>;
   isLoading: boolean;
   userRole?: UserRole;
+  isGuest?: boolean;
 }
 
 export default function GeneralBodyMeetingsTab({
@@ -43,6 +44,7 @@ export default function GeneralBodyMeetingsTab({
   onDeleteMeeting,
   isLoading,
   userRole = "Super Admin",
+  isGuest = false,
 }: GeneralBodyMeetingsTabProps) {
   const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
@@ -239,8 +241,13 @@ export default function GeneralBodyMeetingsTab({
                     </div>
 
                     <h3
-                      onClick={() => setEditingMeeting(m)}
-                      className="text-lg sm:text-xl font-extrabold text-white leading-snug cursor-pointer hover:text-sky-300 transition"
+                      onClick={() => {
+                        if (isGuest) return;
+                        setEditingMeeting(m);
+                      }}
+                      className={`text-lg sm:text-xl font-extrabold text-white leading-snug transition ${
+                        isGuest ? "cursor-default" : "cursor-pointer hover:text-sky-300"
+                      }`}
                     >
                       {m.meeting_title}
                     </h3>
@@ -273,13 +280,17 @@ export default function GeneralBodyMeetingsTab({
                       </button>
                     )}
 
-                    <button
-                      onClick={() => toggleExpand(m.id)}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 transition"
-                    >
-                      <span>{isExpanded ? "Hide" : "Details"}</span>
-                      {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                    </button>
+                    {isGuest ? (
+                      <span className="text-[11px] text-slate-500 italic px-2">Sign in to view details</span>
+                    ) : (
+                      <button
+                        onClick={() => toggleExpand(m.id)}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 transition"
+                      >
+                        <span>{isExpanded ? "Hide" : "Details"}</span>
+                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      </button>
+                    )}
 
                     {canEdit && (
                       <button

@@ -41,7 +41,6 @@ import * as api from "../lib/api";
 import {
   Building2,
   Phone,
-  Mail,
   MapPin,
   ShieldCheck,
   Heart,
@@ -94,11 +93,24 @@ export default function JaitraPortal() {
       }
 
       const hash = window.location.hash.replace("#", "");
-      if (["culture-events", "festivals", "gbm", "issues", "ado-board", "team", "vendor-management"].includes(hash)) {
+      const publicTabs = ["culture-events", "gbm"];
+      const allTabs = ["culture-events", "festivals", "gbm", "issues", "ado-board", "team", "vendor-management"];
+      if (allTabs.includes(hash)) {
         setActiveTab(hash);
       }
     }
   }, []);
+
+  // Redirect to public tab if on a restricted tab without auth
+  useEffect(() => {
+    const restrictedTabs = ["festivals", "issues", "ado-board", "team", "vendor-management"];
+    if (!currentUser && restrictedTabs.includes(activeTab)) {
+      setActiveTab("culture-events");
+      if (typeof window !== "undefined") {
+        window.location.hash = "culture-events";
+      }
+    }
+  }, [currentUser, activeTab]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -602,6 +614,15 @@ export default function JaitraPortal() {
         }}
       />
 
+      {/* Guest Login Prompt Banner */}
+      {!currentUser && (
+        <div className="bg-gradient-to-r from-indigo-950/80 via-slate-900 to-indigo-950/80 border-b border-indigo-800/50 py-3 px-4 text-center">
+          <p className="text-xs sm:text-sm text-slate-300">
+            <span className="font-bold text-indigo-300">Limited View</span> — Sign in to access all tabs, financial details, and admin features.
+          </p>
+        </div>
+      )}
+
       {/* Hero Header Banner with Stats */}
       <HeroBanner
         stats={stats}
@@ -613,6 +634,7 @@ export default function JaitraPortal() {
       <TabNav
         activeTab={activeTab}
         onTabChange={handleTabChange}
+        currentUser={currentUser}
         badgeCounts={{
           events: culturalEvents.length,
           festivals: festivals.length,
@@ -640,6 +662,7 @@ export default function JaitraPortal() {
             onDeleteAgenda={handleDeleteAgenda}
             isLoading={isLoading}
             userRole={currentUser?.role || "User"}
+            isGuest={!currentUser}
           />
         )}
 
@@ -670,6 +693,7 @@ export default function JaitraPortal() {
             onDeleteMeeting={handleDeleteMeeting}
             isLoading={isLoading}
             userRole={currentUser?.role || "User"}
+            isGuest={!currentUser}
           />
         )}
 
@@ -750,20 +774,11 @@ export default function JaitraPortal() {
       )}
 
       {/* Footer */}
-      <footer className="bg-slate-900 border-t border-slate-800 mt-12 py-8 px-4 sm:px-6 lg:px-8 text-xs text-slate-400">
+      <footer className="bg-slate-900 border-t border-slate-800 mt-12 py-6 px-4 sm:px-6 lg:px-8 text-xs text-slate-400">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-sky-400" />
             <span className="font-extrabold text-slate-200">Jaitra Residents Welfare Association</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <a
-              href="mailto:jaitra-association-hyd@googlegroups.com"
-              className="flex items-center gap-1.5 text-slate-300 hover:text-sky-400 transition"
-            >
-              <Mail className="w-3.5 h-3.5 text-sky-400" />
-              <span>jaitra-association-hyd@googlegroups.com</span>
-            </a>
           </div>
           <p className="text-[11px] text-slate-500">
             Powered by Next.js 14, React, TypeScript &amp; Neon Serverless PostgreSQL Database

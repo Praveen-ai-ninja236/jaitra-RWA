@@ -270,7 +270,7 @@ export default function AuthModal({
 
               {/* SIGN IN TAB */}
               {tab === "signin" && (
-                <form onSubmit={handleSignIn} className="space-y-4">
+                <form onSubmit={handleSignIn} className="space-y-4" autoComplete="off">
                   {/* Quick Role Switcher */}
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">
@@ -325,6 +325,12 @@ export default function AuthModal({
                       <input
                         type="email"
                         required
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        data-lpignore="true"
+                        data-1p-ignore="true"
                         value={signInEmail}
                         onChange={(e) => setSignInEmail(e.target.value)}
                         className="w-full pl-9 pr-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-slate-200 text-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
@@ -340,6 +346,12 @@ export default function AuthModal({
                       <input
                         type="password"
                         required
+                        autoComplete="new-password"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        data-lpignore="true"
+                        data-1p-ignore="true"
                         value={signInPassword}
                         onChange={(e) => setSignInPassword(e.target.value)}
                         className="w-full pl-9 pr-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-slate-200 text-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
@@ -361,7 +373,7 @@ export default function AuthModal({
 
               {/* SIGN UP / REGISTER TAB */}
               {tab === "signup" && (
-                <form onSubmit={handleSignUp} className="space-y-3">
+                <form onSubmit={handleSignUp} className="space-y-3" autoComplete="off">
                   <div>
                     <label className="block text-xs font-semibold text-slate-300 mb-1">Full Name *</label>
                     <div className="relative">
@@ -369,6 +381,12 @@ export default function AuthModal({
                       <input
                         type="text"
                         required
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        data-lpignore="true"
+                        data-1p-ignore="true"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="e.g. S. Ramesh Kumar"
@@ -384,6 +402,12 @@ export default function AuthModal({
                       <input
                         type="email"
                         required
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        data-lpignore="true"
+                        data-1p-ignore="true"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="e.g. ramesh@jaitra.org"
@@ -399,6 +423,12 @@ export default function AuthModal({
                       <input
                         type="password"
                         required
+                        autoComplete="new-password"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        data-lpignore="true"
+                        data-1p-ignore="true"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Min 6 characters"

@@ -10,6 +10,7 @@ import {
   Users,
   Briefcase,
 } from "lucide-react";
+import { AppUser } from "../lib/types";
 
 export interface TabItem {
   id: string;
@@ -20,6 +21,7 @@ export interface TabItem {
   badgeColor?: string;
   activeBorderColor: string;
   activeGlow: string;
+  authRequired?: boolean;
 }
 
 interface TabNavProps {
@@ -34,10 +36,13 @@ interface TabNavProps {
     team?: number;
     vendors?: number;
   };
+  currentUser?: AppUser | null;
 }
 
-export default function TabNav({ activeTab, onTabChange, badgeCounts }: TabNavProps) {
-  const tabs: TabItem[] = [
+export default function TabNav({ activeTab, onTabChange, badgeCounts, currentUser }: TabNavProps) {
+  const isAuthenticated = Boolean(currentUser);
+
+  const allTabs: TabItem[] = [
     {
       id: "culture-events",
       label: "1. Cultural Events",
@@ -57,6 +62,7 @@ export default function TabNav({ activeTab, onTabChange, badgeCounts }: TabNavPr
       badgeColor: "bg-amber-900/80 text-amber-200 border border-amber-700",
       activeBorderColor: "from-amber-600 to-amber-400",
       activeGlow: "shadow-amber-500/20",
+      authRequired: true,
     },
     {
       id: "gbm",
@@ -77,6 +83,7 @@ export default function TabNav({ activeTab, onTabChange, badgeCounts }: TabNavPr
       badgeColor: "bg-rose-900/80 text-rose-200 border border-rose-700",
       activeBorderColor: "from-rose-600 to-rose-400",
       activeGlow: "shadow-rose-500/20",
+      authRequired: true,
     },
     {
       id: "ado-board",
@@ -87,6 +94,7 @@ export default function TabNav({ activeTab, onTabChange, badgeCounts }: TabNavPr
       badgeColor: "bg-orange-900/80 text-orange-200 border border-orange-700",
       activeBorderColor: "from-orange-600 to-amber-400",
       activeGlow: "shadow-orange-500/20",
+      authRequired: true,
     },
     {
       id: "team",
@@ -97,6 +105,7 @@ export default function TabNav({ activeTab, onTabChange, badgeCounts }: TabNavPr
       badgeColor: "bg-emerald-900/80 text-emerald-200 border border-emerald-700",
       activeBorderColor: "from-emerald-600 to-emerald-400",
       activeGlow: "shadow-emerald-500/20",
+      authRequired: true,
     },
     {
       id: "vendor-management",
@@ -107,8 +116,11 @@ export default function TabNav({ activeTab, onTabChange, badgeCounts }: TabNavPr
       badgeColor: "bg-teal-900/80 text-teal-200 border border-teal-700",
       activeBorderColor: "from-teal-600 to-teal-400",
       activeGlow: "shadow-teal-500/20",
+      authRequired: true,
     },
   ];
+
+  const tabs = isAuthenticated ? allTabs : allTabs.filter((t) => !t.authRequired);
 
   return (
     <div className="bg-slate-900/95 border-b border-slate-800 sticky top-16 z-30 shadow-md backdrop-blur-md">

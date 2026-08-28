@@ -51,6 +51,7 @@ interface CulturalEventsTabProps {
   onDeleteAgenda: (agendaId: number) => Promise<void>;
   isLoading: boolean;
   userRole?: UserRole;
+  isGuest?: boolean;
 }
 
 export default function CulturalEventsTab({
@@ -66,6 +67,7 @@ export default function CulturalEventsTab({
   onDeleteAgenda,
   isLoading,
   userRole = "Super Admin",
+  isGuest = false,
 }: CulturalEventsTabProps) {
   const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
@@ -425,13 +427,16 @@ export default function CulturalEventsTab({
                   {/* Title & Description */}
                   <h3
                     onClick={() => {
+                      if (isGuest) return;
                       setActiveEventDetail(event);
                       setDetailTab("participants");
                     }}
-                    className="text-lg sm:text-xl font-extrabold text-white leading-snug cursor-pointer group-hover:text-indigo-200 transition flex items-center justify-between"
+                    className={`text-lg sm:text-xl font-extrabold text-white leading-snug transition flex items-center justify-between ${
+                      isGuest ? "cursor-default" : "cursor-pointer group-hover:text-indigo-200"
+                    }`}
                   >
                     <span>{event.title}</span>
-                    <ChevronRight className="w-5 h-5 text-indigo-400 opacity-80 group-hover:translate-x-1 transition" />
+                    {!isGuest && <ChevronRight className="w-5 h-5 text-indigo-400 opacity-80 group-hover:translate-x-1 transition" />}
                   </h3>
                   <p className="text-xs text-slate-300 mt-2.5 leading-relaxed font-normal">
                     {event.description}
@@ -461,7 +466,7 @@ export default function CulturalEventsTab({
                         Coord: <strong className="text-slate-200">{event.coordinator}</strong>
                       </span>
                     </div>
-                    {event.budget && (
+                    {!isGuest && event.budget && (
                       <div className="flex items-center gap-1 text-slate-200 font-mono text-[11px] font-bold bg-slate-800/90 border border-slate-700 px-2 py-0.5 rounded">
                         <IndianRupee className="w-3 h-3 text-slate-400" />
                         <span>{event.budget.replace("₹", "").trim()}</span>
@@ -480,16 +485,20 @@ export default function CulturalEventsTab({
                     <span className="text-slate-400 text-[11px]">Enrolled Participants</span>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      setActiveEventDetail(event);
-                      setDetailTab("participants");
-                    }}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-300 hover:text-white bg-indigo-500/20 hover:bg-indigo-500/30 px-3.5 py-1.5 rounded-xl border border-indigo-400/40 transition shadow-sm"
-                  >
-                    <UserPlus className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>View / Manage Participants</span>
-                  </button>
+                  {isGuest ? (
+                    <span className="text-[11px] text-slate-500 italic">Sign in to view details</span>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setActiveEventDetail(event);
+                        setDetailTab("participants");
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-300 hover:text-white bg-indigo-500/20 hover:bg-indigo-500/30 px-3.5 py-1.5 rounded-xl border border-indigo-400/40 transition shadow-sm"
+                    >
+                      <UserPlus className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>View / Manage Participants</span>
+                    </button>
+                  )}
                 </div>
               </div>
             );
