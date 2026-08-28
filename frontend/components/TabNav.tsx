@@ -62,7 +62,6 @@ export default function TabNav({ activeTab, onTabChange, badgeCounts, currentUse
       badgeColor: "bg-amber-900/80 text-amber-200 border border-amber-700",
       activeBorderColor: "from-amber-600 to-amber-400",
       activeGlow: "shadow-amber-500/20",
-      authRequired: true,
     },
     {
       id: "gbm",

@@ -103,7 +103,7 @@ export default function JaitraPortal() {
 
   // Redirect to public tab if on a restricted tab without auth
   useEffect(() => {
-    const restrictedTabs = ["festivals", "issues", "ado-board", "team", "vendor-management"];
+    const restrictedTabs = ["issues", "ado-board", "team", "vendor-management"];
     if (!currentUser && restrictedTabs.includes(activeTab)) {
       setActiveTab("culture-events");
       if (typeof window !== "undefined") {
@@ -682,6 +682,7 @@ export default function JaitraPortal() {
             onOpenAuditReport={handleOpenAuditReport}
             isLoading={isLoading}
             userRole={currentUser?.role || "User"}
+            isGuest={!currentUser}
           />
         )}
 

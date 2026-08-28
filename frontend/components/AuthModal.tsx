@@ -271,6 +271,12 @@ export default function AuthModal({
               {/* SIGN IN TAB */}
               {tab === "signin" && (
                 <form onSubmit={handleSignIn} className="space-y-4" autoComplete="off">
+                  {/* Hidden trap fields to absorb browser autofill */}
+                  <div style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, overflow: "hidden" }} aria-hidden="true">
+                    <input type="text" name="fakeusernameremember" tabIndex={-1} autoComplete="username" />
+                    <input type="password" name="fakepasswordremember" tabIndex={-1} autoComplete="current-password" />
+                  </div>
+
                   {/* Quick Role Switcher */}
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">
@@ -323,14 +329,17 @@ export default function AuthModal({
                     <div className="relative">
                       <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                       <input
-                        type="email"
+                        type="text"
+                        inputMode="email"
                         required
-                        autoComplete="off"
+                        autoComplete="new-email"
                         autoCorrect="off"
                         autoCapitalize="off"
                         spellCheck="false"
                         data-lpignore="true"
                         data-1p-ignore="true"
+                        data-testid="login-email"
+                        name="login-email-unique-12345"
                         value={signInEmail}
                         onChange={(e) => setSignInEmail(e.target.value)}
                         className="w-full pl-9 pr-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-slate-200 text-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
@@ -352,6 +361,8 @@ export default function AuthModal({
                         spellCheck="false"
                         data-lpignore="true"
                         data-1p-ignore="true"
+                        data-testid="login-password"
+                        name="login-password-unique-12345"
                         value={signInPassword}
                         onChange={(e) => setSignInPassword(e.target.value)}
                         className="w-full pl-9 pr-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-slate-200 text-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
@@ -374,6 +385,12 @@ export default function AuthModal({
               {/* SIGN UP / REGISTER TAB */}
               {tab === "signup" && (
                 <form onSubmit={handleSignUp} className="space-y-3" autoComplete="off">
+                  {/* Hidden trap fields to absorb browser autofill */}
+                  <div style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, overflow: "hidden" }} aria-hidden="true">
+                    <input type="text" name="fakeusernamesignup" tabIndex={-1} autoComplete="username" />
+                    <input type="password" name="fakepasswordsignup" tabIndex={-1} autoComplete="new-password" />
+                  </div>
+
                   <div>
                     <label className="block text-xs font-semibold text-slate-300 mb-1">Full Name *</label>
                     <div className="relative">
@@ -387,6 +404,7 @@ export default function AuthModal({
                         spellCheck="false"
                         data-lpignore="true"
                         data-1p-ignore="true"
+                        name="signup-name-unique-12345"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="e.g. S. Ramesh Kumar"
@@ -400,14 +418,16 @@ export default function AuthModal({
                     <div className="relative">
                       <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
                       <input
-                        type="email"
+                        type="text"
+                        inputMode="email"
                         required
-                        autoComplete="off"
+                        autoComplete="new-email"
                         autoCorrect="off"
                         autoCapitalize="off"
                         spellCheck="false"
                         data-lpignore="true"
                         data-1p-ignore="true"
+                        name="signup-email-unique-12345"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="e.g. ramesh@jaitra.org"
@@ -429,6 +449,7 @@ export default function AuthModal({
                         spellCheck="false"
                         data-lpignore="true"
                         data-1p-ignore="true"
+                        name="signup-password-unique-12345"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Min 6 characters"

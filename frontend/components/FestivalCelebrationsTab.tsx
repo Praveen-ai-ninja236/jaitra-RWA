@@ -57,6 +57,7 @@ interface FestivalCelebrationsTabProps {
   onOpenAuditReport: () => void;
   isLoading: boolean;
   userRole?: UserRole;
+  isGuest?: boolean;
 }
 
 export default function FestivalCelebrationsTab({
@@ -74,6 +75,7 @@ export default function FestivalCelebrationsTab({
   onOpenAuditReport,
   isLoading,
   userRole = "Super Admin",
+  isGuest = false,
 }: FestivalCelebrationsTabProps) {
   const canEdit = userRole === "Super Admin" || userRole === "Admin";
   const [searchTerm, setSearchTerm] = useState("");
@@ -377,14 +379,16 @@ export default function FestivalCelebrationsTab({
 
         <div className="flex items-center gap-3">
           {/* Download Audit Report Button */}
-          <button
-            onClick={onOpenAuditReport}
-            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-extrabold px-3.5 sm:px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 transition transform active:scale-95"
-            title="Download Comprehensive Society Audit Statement"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span>Download Audit Report</span>
-          </button>
+          {!isGuest && (
+            <button
+              onClick={onOpenAuditReport}
+              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-extrabold px-3.5 sm:px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 transition transform active:scale-95"
+              title="Download Comprehensive Society Audit Statement"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              <span>Download Audit Report</span>
+            </button>
+          )}
 
           {/* Add Festival Button */}
           {canEdit && (
@@ -493,13 +497,16 @@ export default function FestivalCelebrationsTab({
                   {/* Title & Description */}
                   <h3
                     onClick={() => {
+                      if (isGuest) return;
                       setActiveFestivalDetail(fest);
                       setDetailActiveTab("overview");
                     }}
-                    className="text-lg sm:text-xl font-extrabold text-white leading-snug cursor-pointer group-hover:text-amber-300 transition flex items-center justify-between"
+                    className={`text-lg sm:text-xl font-extrabold text-white leading-snug transition flex items-center justify-between ${
+                      isGuest ? "cursor-default" : "cursor-pointer group-hover:text-amber-300"
+                    }`}
                   >
                     <span>{fest.festival_name}</span>
-                    <ChevronRight className="w-5 h-5 text-amber-400 opacity-80 group-hover:translate-x-1 transition" />
+                    {!isGuest && <ChevronRight className="w-5 h-5 text-amber-400 opacity-80 group-hover:translate-x-1 transition" />}
                   </h3>
                   <p className="text-xs text-slate-300 mt-2 leading-relaxed">{fest.description}</p>
 
@@ -545,23 +552,25 @@ export default function FestivalCelebrationsTab({
                   )}
 
                   {/* Collections vs Expenses Mini Bar */}
-                  <div className="mt-4 p-3.5 bg-slate-950/80 rounded-xl border border-amber-800/40 flex items-center justify-between text-xs">
-                    <div>
-                      <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Resident Collections</span>
-                      <p className="font-extrabold text-emerald-300 font-mono mt-0.5 text-sm">
-                        ₹ {totalCol.toLocaleString("en-IN")}{" "}
-                        <span className="text-slate-500 font-normal text-xs">({colList.length} donors)</span>
-                      </p>
-                    </div>
+                  {!isGuest && (
+                    <div className="mt-4 p-3.5 bg-slate-950/80 rounded-xl border border-amber-800/40 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Resident Collections</span>
+                        <p className="font-extrabold text-emerald-300 font-mono mt-0.5 text-sm">
+                          ₹ {totalCol.toLocaleString("en-IN")}{" "}
+                          <span className="text-slate-500 font-normal text-xs">({colList.length} donors)</span>
+                        </p>
+                      </div>
 
-                    <div className="text-right">
-                      <span className="text-[10px] text-rose-400 font-bold uppercase tracking-wider">Approved Expenses</span>
-                      <p className="font-extrabold text-rose-300 font-mono mt-0.5 text-sm">
-                        ₹ {totalExp.toLocaleString("en-IN")}{" "}
-                        <span className="text-slate-500 font-normal text-xs">({expList.length} bills)</span>
-                      </p>
+                      <div className="text-right">
+                        <span className="text-[10px] text-rose-400 font-bold uppercase tracking-wider">Approved Expenses</span>
+                        <p className="font-extrabold text-rose-300 font-mono mt-0.5 text-sm">
+                          ₹ {totalExp.toLocaleString("en-IN")}{" "}
+                          <span className="text-slate-500 font-normal text-xs">({expList.length} bills)</span>
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Bottom Action Button */}
@@ -570,16 +579,20 @@ export default function FestivalCelebrationsTab({
                     Lead: <strong className="text-slate-200">{fest.lead_organizer}</strong>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      setActiveFestivalDetail(fest);
-                      setDetailActiveTab("collections");
-                    }}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 hover:text-slate-950 bg-amber-500/20 hover:bg-amber-400 px-3.5 py-1.5 rounded-xl border border-amber-400/40 transition shadow-sm"
-                  >
-                    <Receipt className="w-3.5 h-3.5" />
-                    <span>View Financials &amp; Audit</span>
-                  </button>
+                  {isGuest ? (
+                    <span className="text-[11px] text-slate-500 italic">Sign in to view financials</span>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setActiveFestivalDetail(fest);
+                        setDetailActiveTab("collections");
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 hover:text-slate-950 bg-amber-500/20 hover:bg-amber-400 px-3.5 py-1.5 rounded-xl border border-amber-400/40 transition shadow-sm"
+                    >
+                      <Receipt className="w-3.5 h-3.5" />
+                      <span>View Financials &amp; Audit</span>
+                    </button>
+                  )}
                 </div>
               </div>
             );

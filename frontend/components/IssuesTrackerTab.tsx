@@ -142,6 +142,31 @@ export default function IssuesTrackerTab({
       });
   }, [issues, searchTerm, selectedTowerFilter, selectedStatus, selectedPriority, selectedCategory, sortField, sortOrder]);
 
+  // Group filtered issues by tower for card view
+  const issuesByTower = useMemo(() => {
+    const groups: Record<string, CommunityIssue[]> = {};
+    const towerOrder = ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F", "Clubhouse", "Common Space"];
+    for (const issue of filteredIssues) {
+      const tower = issue.tower || "Other";
+      if (!groups[tower]) groups[tower] = [];
+      groups[tower].push(issue);
+    }
+    // Return in tower order
+    const result: { tower: string; issues: CommunityIssue[] }[] = [];
+    for (const t of towerOrder) {
+      if (groups[t] && groups[t].length > 0) {
+        result.push({ tower: t, issues: groups[t] });
+      }
+    }
+    // Add any remaining towers not in order
+    for (const [t, iss] of Object.entries(groups)) {
+      if (!towerOrder.includes(t)) {
+        result.push({ tower: t, issues: iss });
+      }
+    }
+    return result;
+  }, [filteredIssues]);
+
   const currentDetailIssue = useMemo(() => {
     if (!activeIssueDetail) return null;
     return issues.find((i) => i.id === activeIssueDetail.id) || activeIssueDetail;
@@ -349,11 +374,11 @@ export default function IssuesTrackerTab({
         </div>
       </div>
 
-      {/* VIEW MODE 1: MULTI-CARDS GRID (COMPACT & SLEEK) */}
+      {/* VIEW MODE 1: MULTI-CARDS GRID (GROUPED BY TOWER) */}
       {viewMode === "cards" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredIssues.length === 0 ? (
-            <div className="col-span-full bg-slate-900/60 rounded-2xl p-12 text-center border border-slate-800 shadow-md">
+        <div className="space-y-6">
+          {issuesByTower.length === 0 ? (
+            <div className="bg-slate-900/60 rounded-2xl p-12 text-center border border-slate-800 shadow-md">
               <ShieldAlert className="w-12 h-12 text-slate-600 mx-auto mb-3" />
               <h3 className="text-base font-bold text-slate-300">No maintenance tickets found</h3>
               <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
@@ -361,82 +386,95 @@ export default function IssuesTrackerTab({
               </p>
             </div>
           ) : (
-            filteredIssues.map((issue) => {
-              const isResolved = issue.status === "Resolved" || issue.status === "Closed";
-
-              return (
-                <div
-                  key={issue.id}
-                  onClick={() => setActiveIssueDetail(issue)}
-                  className={`bg-slate-900/90 rounded-2xl p-4 border border-slate-800 hover:border-rose-500/50 shadow-md hover:shadow-xl transition-all duration-200 cursor-pointer flex flex-col justify-between group ${
-                    issue.priority === "Critical" ? "border-l-4 border-l-rose-500" : ""
-                  }`}
-                >
-                  <div>
-                    {/* Top Row: Code, Tower Badge, Priority */}
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="font-mono text-[11px] font-extrabold text-sky-400 bg-sky-950/90 border border-sky-800/80 px-2 py-0.5 rounded-md">
-                        {issue.issue_code || `ISS-${issue.id}`}
-                      </span>
-
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
-                            issue.priority === "Critical"
-                              ? "bg-rose-950 text-rose-300 border-rose-600 animate-pulse"
-                              : issue.priority === "High"
-                              ? "bg-amber-950 text-amber-300 border-amber-600"
-                              : "bg-slate-800 text-slate-300 border-slate-700"
-                          }`}
-                        >
-                          {issue.priority}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Title */}
-                    <h4 className="text-xs sm:text-sm font-bold text-white leading-snug line-clamp-2 group-hover:text-rose-300 transition mt-1">
-                      {issue.title}
-                    </h4>
-
-                    {/* Tower & Location */}
-                    <div className="flex items-center gap-1.5 mt-2.5">
-                      <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded border ${getTowerColor(issue.tower)}`}>
-                        {issue.tower}
-                      </span>
-                      <span className="text-[11px] text-slate-300 font-semibold truncate">
-                        {issue.flat_no ? `Flat ${issue.flat_no}` : issue.flat_or_location}
-                      </span>
-                    </div>
-
-                    {/* Category Tag */}
-                    <div className="mt-2 text-[10px] text-slate-400 font-medium flex items-center gap-1">
-                      <Tag className="w-3 h-3 text-slate-500 shrink-0" />
-                      <span className="truncate">{issue.category}</span>
-                    </div>
-                  </div>
-
-                  {/* Card Bottom: Status & Reported By */}
-                  <div className="mt-4 pt-2.5 border-t border-slate-800 flex items-center justify-between text-[11px]">
-                    <span
-                      className={`font-bold px-2 py-0.5 rounded-full text-[10px] border ${
-                        isResolved
-                          ? "bg-emerald-950 text-emerald-300 border-emerald-700/60"
-                          : issue.status === "In Progress"
-                          ? "bg-sky-950 text-sky-300 border-sky-700/60"
-                          : "bg-amber-950 text-amber-300 border-amber-700/60"
-                      }`}
-                    >
-                      {issue.status}
-                    </span>
-
-                    <span className="text-[10px] text-slate-400 truncate max-w-[120px]">
-                      By {issue.reported_by}
-                    </span>
-                  </div>
+            issuesByTower.map(({ tower, issues: towerIssues }) => (
+              <div key={tower}>
+                {/* Tower Section Header */}
+                <div className="flex items-center gap-3 mb-3">
+                  <span className={`text-xs font-extrabold px-3 py-1 rounded-lg border ${getTowerColor(tower)}`}>
+                    {tower}
+                  </span>
+                  <span className="text-xs text-slate-400 font-semibold">
+                    {towerIssues.length} {towerIssues.length === 1 ? "ticket" : "tickets"}
+                  </span>
+                  <div className="flex-1 h-px bg-slate-800" />
                 </div>
-              );
-            })
+
+                {/* Tower's Issue Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {towerIssues.map((issue) => {
+                    const isResolved = issue.status === "Resolved" || issue.status === "Closed";
+
+                    return (
+                      <div
+                        key={issue.id}
+                        onClick={() => setActiveIssueDetail(issue)}
+                        className={`bg-slate-900/90 rounded-2xl p-4 border border-slate-800 hover:border-rose-500/50 shadow-md hover:shadow-xl transition-all duration-200 cursor-pointer flex flex-col justify-between group ${
+                          issue.priority === "Critical" ? "border-l-4 border-l-rose-500" : ""
+                        }`}
+                      >
+                        <div>
+                          {/* Top Row: Code & Priority */}
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <span className="font-mono text-[11px] font-extrabold text-sky-400 bg-sky-950/90 border border-sky-800/80 px-2 py-0.5 rounded-md">
+                              {issue.issue_code || `ISS-${issue.id}`}
+                            </span>
+
+                            <span
+                              className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
+                                issue.priority === "Critical"
+                                  ? "bg-rose-950 text-rose-300 border-rose-600 animate-pulse"
+                                  : issue.priority === "High"
+                                  ? "bg-amber-950 text-amber-300 border-amber-600"
+                                  : "bg-slate-800 text-slate-300 border-slate-700"
+                              }`}
+                            >
+                              {issue.priority}
+                            </span>
+                          </div>
+
+                          {/* Title */}
+                          <h4 className="text-xs sm:text-sm font-bold text-white leading-snug line-clamp-2 group-hover:text-rose-300 transition mt-1">
+                            {issue.title}
+                          </h4>
+
+                          {/* Flat & Location */}
+                          <div className="flex items-center gap-1.5 mt-2">
+                            <span className="text-[11px] text-slate-300 font-semibold truncate">
+                              {issue.flat_no ? `Flat ${issue.flat_no}` : issue.flat_or_location}
+                            </span>
+                          </div>
+
+                          {/* Category Tag */}
+                          <div className="mt-2 text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                            <Tag className="w-3 h-3 text-slate-500 shrink-0" />
+                            <span className="truncate">{issue.category}</span>
+                          </div>
+                        </div>
+
+                        {/* Card Bottom: Status & Reported By */}
+                        <div className="mt-4 pt-2.5 border-t border-slate-800 flex items-center justify-between text-[11px]">
+                          <span
+                            className={`font-bold px-2 py-0.5 rounded-full text-[10px] border ${
+                              isResolved
+                                ? "bg-emerald-950 text-emerald-300 border-emerald-700/60"
+                                : issue.status === "In Progress"
+                                ? "bg-sky-950 text-sky-300 border-sky-700/60"
+                                : "bg-amber-950 text-amber-300 border-amber-700/60"
+                            }`}
+                          >
+                            {issue.status}
+                          </span>
+
+                          <span className="text-[10px] text-slate-400 truncate max-w-[120px]">
+                            By {issue.reported_by}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
           )}
         </div>
       )}
