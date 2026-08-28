@@ -686,100 +686,106 @@ export default function FestivalCelebrationsTab({
             {/* TAB 2: COLLECTIONS TRACKER */}
             {detailActiveTab === "collections" && (
               <div className="space-y-4">
-                {/* Add Collection Form */}
-                <form
-                  onSubmit={handleAddCollectionSubmit}
-                  className="p-4 bg-slate-950 rounded-xl border border-emerald-900/50 space-y-3"
-                >
-                  <h4 className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Record Resident Contribution / Donation</span>
-                  </h4>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
-                    <div>
-                      <DynamicSelect
-                        label="Tower"
-                        required
-                        value={collData.tower}
-                        onChange={(val) => setCollData({ ...collData, tower: val })}
-                        options={defaultTowers}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Flat No *</label>
-                      <input
-                        type="text"
-                        required
-                        value={collData.flat_no}
-                        onChange={(e) => setCollData({ ...collData, flat_no: e.target.value })}
-                        placeholder="e.g. 402"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Donor Resident Name *</label>
-                      <input
-                        type="text"
-                        required
-                        value={collData.donor_name}
-                        onChange={(e) => setCollData({ ...collData, donor_name: e.target.value })}
-                        placeholder="e.g. S. Venkat Rao"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Amount (₹) *</label>
-                      <input
-                        type="number"
-                        required
-                        value={collData.amount}
-                        onChange={(e) => setCollData({ ...collData, amount: parseFloat(e.target.value) || 0 })}
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-mono"
-                      />
-                    </div>
-
-                    <div>
-                      <DynamicSelect
-                        label="Payment Mode"
-                        required
-                        value={collData.payment_mode}
-                        onChange={(val) => setCollData({ ...collData, payment_mode: val })}
-                        options={defaultPaymentModes}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Transaction Ref / Cheque No</label>
-                      <input
-                        type="text"
-                        value={collData.transaction_ref}
-                        onChange={(e) => setCollData({ ...collData, transaction_ref: e.target.value })}
-                        placeholder="UPI-Ref / Cheque #"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Receipt Upload */}
-                  <FileUploadInput
-                    label="Attach Receipt / Contribution Proof (Optional)"
-                    value={collData.receipt_url}
-                    onChange={(dataUrl) => setCollData({ ...collData, receipt_url: dataUrl })}
-                  />
-
-                  <button
-                    type="submit"
-                    className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition shadow-md"
+                {/* Add Collection Form (Admin / Super Admin Only) */}
+                {canEdit ? (
+                  <form
+                    onSubmit={handleAddCollectionSubmit}
+                    className="p-4 bg-slate-950 rounded-xl border border-emerald-900/50 space-y-3"
                   >
-                    + Record Collection in Live Database
-                  </button>
-                </form>
+                    <h4 className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Record Resident Contribution / Donation</span>
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                      <div>
+                        <DynamicSelect
+                          label="Tower"
+                          required
+                          value={collData.tower}
+                          onChange={(val) => setCollData({ ...collData, tower: val })}
+                          options={defaultTowers}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Flat No *</label>
+                        <input
+                          type="text"
+                          required
+                          value={collData.flat_no}
+                          onChange={(e) => setCollData({ ...collData, flat_no: e.target.value })}
+                          placeholder="e.g. 402"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Donor Resident Name *</label>
+                        <input
+                          type="text"
+                          required
+                          value={collData.donor_name}
+                          onChange={(e) => setCollData({ ...collData, donor_name: e.target.value })}
+                          placeholder="e.g. S. Venkat Rao"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Amount (₹) *</label>
+                        <input
+                          type="number"
+                          required
+                          value={collData.amount}
+                          onChange={(e) => setCollData({ ...collData, amount: parseFloat(e.target.value) || 0 })}
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <DynamicSelect
+                          label="Payment Mode"
+                          required
+                          value={collData.payment_mode}
+                          onChange={(val) => setCollData({ ...collData, payment_mode: val })}
+                          options={defaultPaymentModes}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Transaction Ref / Cheque No</label>
+                        <input
+                          type="text"
+                          value={collData.transaction_ref}
+                          onChange={(e) => setCollData({ ...collData, transaction_ref: e.target.value })}
+                          placeholder="UPI-Ref / Cheque #"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Receipt Upload */}
+                    <FileUploadInput
+                      label="Attach Receipt / Contribution Proof (Optional)"
+                      value={collData.receipt_url}
+                      onChange={(dataUrl) => setCollData({ ...collData, receipt_url: dataUrl })}
+                    />
+
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition shadow-md"
+                    >
+                      + Record Collection in Live Database
+                    </button>
+                  </form>
+                ) : (
+                  <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-xs text-slate-400 flex items-center justify-between">
+                    <span>Resident View Only Mode: Verified donor records and receipts are listed below.</span>
+                  </div>
+                )}
 
                 {/* Collections Table Toolbar */}
                 <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-900 rounded-xl border border-slate-800 text-xs">
@@ -877,26 +883,30 @@ export default function FestivalCelebrationsTab({
                             </td>
                             <td className="p-2.5 text-slate-400">{col.collected_date}</td>
                             <td className="p-2.5 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
-                                <button
-                                  onClick={() => setEditingCollection(col)}
-                                  className="text-slate-400 hover:text-amber-300 p-1"
-                                  title="Edit Collection"
-                                >
-                                  <Edit className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    if (confirm(`Delete collection entry for ${col.donor_name}?`)) {
-                                      onDeleteCollection(col.id);
-                                    }
-                                  }}
-                                  className="text-slate-400 hover:text-rose-400 p-1"
-                                  title="Delete Collection"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
+                              {canEdit ? (
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    onClick={() => setEditingCollection(col)}
+                                    className="text-slate-400 hover:text-amber-300 p-1"
+                                    title="Edit Collection"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (confirm(`Delete collection entry for ${col.donor_name}?`)) {
+                                        onDeleteCollection(col.id);
+                                      }
+                                    }}
+                                    className="text-slate-400 hover:text-rose-400 p-1"
+                                    title="Delete Collection"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-[10px] text-slate-500 font-mono">Audited</span>
+                              )}
                             </td>
                           </tr>
                         ))
@@ -910,121 +920,127 @@ export default function FestivalCelebrationsTab({
             {/* TAB 3: EXPENSES & AUDIT APPROVER TRACKER */}
             {detailActiveTab === "expenses" && (
               <div className="space-y-4">
-                {/* Add Expense Form */}
-                <form
-                  onSubmit={handleAddExpenseSubmit}
-                  className="p-4 bg-slate-950 rounded-xl border border-rose-900/50 space-y-3"
-                >
-                  <h4 className="text-xs font-bold text-rose-400 flex items-center gap-1.5">
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add Expense Voucher for Treasurer / MC Audit Approval</span>
-                  </h4>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <div className="sm:col-span-2">
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Expense Title / Item *</label>
-                      <input
-                        type="text"
-                        required
-                        value={expData.title}
-                        onChange={(e) => setExpData({ ...expData, title: e.target.value })}
-                        placeholder="e.g. Mandapam Sound System & Mic Rental"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-
-                    <div>
-                      <DynamicSelect
-                        label="Category"
-                        required
-                        value={expData.category}
-                        onChange={(val) => setExpData({ ...expData, category: val })}
-                        options={defaultExpenseCategories}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Amount (₹) *</label>
-                      <input
-                        type="number"
-                        required
-                        value={expData.amount}
-                        onChange={(e) => setExpData({ ...expData, amount: parseFloat(e.target.value) || 0 })}
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-mono"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Vendor / Contractor</label>
-                      <input
-                        type="text"
-                        value={expData.vendor_name}
-                        onChange={(e) => setExpData({ ...expData, vendor_name: e.target.value })}
-                        placeholder="e.g. Sri Balaji Lights"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-
-                    <div>
-                      <DynamicSelect
-                        label="Payment Mode"
-                        value={expData.payment_mode || "UPI"}
-                        onChange={(val) => setExpData({ ...expData, payment_mode: val })}
-                        options={defaultPaymentModes}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Bill Date</label>
-                      <input
-                        type="date"
-                        value={expData.bill_date}
-                        onChange={(e) => setExpData({ ...expData, bill_date: e.target.value })}
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Invoice / Bill Upload */}
-                  <FileUploadInput
-                    label="Attach Invoice / Bill Proof (Audit Evidence)"
-                    value={expData.invoice_url}
-                    onChange={(dataUrl) => setExpData({ ...expData, invoice_url: dataUrl })}
-                  />
-
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Designated Approver</label>
-                      <input
-                        type="text"
-                        value={expData.approver_name}
-                        onChange={(e) => setExpData({ ...expData, approver_name: e.target.value })}
-                        placeholder="Vikram Patel (Treasurer)"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Audit Verification Notes</label>
-                      <input
-                        type="text"
-                        value={expData.audit_evidence_notes}
-                        onChange={(e) => setExpData({ ...expData, audit_evidence_notes: e.target.value })}
-                        placeholder="GST Verified & Goods Inspected"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl transition shadow-md"
+                {/* Add Expense Form (Admin / Super Admin Only) */}
+                {canEdit ? (
+                  <form
+                    onSubmit={handleAddExpenseSubmit}
+                    className="p-4 bg-slate-950 rounded-xl border border-rose-900/50 space-y-3"
                   >
-                    + Submit Expense Bill for Audit in Database
-                  </button>
-                </form>
+                    <h4 className="text-xs font-bold text-rose-400 flex items-center gap-1.5">
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Expense Voucher for Treasurer / MC Audit Approval</span>
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <div className="sm:col-span-2">
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Expense Title / Item *</label>
+                        <input
+                          type="text"
+                          required
+                          value={expData.title}
+                          onChange={(e) => setExpData({ ...expData, title: e.target.value })}
+                          placeholder="e.g. Mandapam Sound System & Mic Rental"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <DynamicSelect
+                          label="Category"
+                          required
+                          value={expData.category}
+                          onChange={(val) => setExpData({ ...expData, category: val })}
+                          options={defaultExpenseCategories}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Amount (₹) *</label>
+                        <input
+                          type="number"
+                          required
+                          value={expData.amount}
+                          onChange={(e) => setExpData({ ...expData, amount: parseFloat(e.target.value) || 0 })}
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Vendor / Contractor</label>
+                        <input
+                          type="text"
+                          value={expData.vendor_name}
+                          onChange={(e) => setExpData({ ...expData, vendor_name: e.target.value })}
+                          placeholder="e.g. Sri Balaji Lights"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <DynamicSelect
+                          label="Payment Mode"
+                          value={expData.payment_mode || "UPI"}
+                          onChange={(val) => setExpData({ ...expData, payment_mode: val })}
+                          options={defaultPaymentModes}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Bill Date</label>
+                        <input
+                          type="date"
+                          value={expData.bill_date}
+                          onChange={(e) => setExpData({ ...expData, bill_date: e.target.value })}
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Invoice / Bill Upload */}
+                    <FileUploadInput
+                      label="Attach Invoice / Bill Proof (Audit Evidence)"
+                      value={expData.invoice_url}
+                      onChange={(dataUrl) => setExpData({ ...expData, invoice_url: dataUrl })}
+                    />
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Designated Approver</label>
+                        <input
+                          type="text"
+                          value={expData.approver_name}
+                          onChange={(e) => setExpData({ ...expData, approver_name: e.target.value })}
+                          placeholder="Vikram Patel (Treasurer)"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Audit Verification Notes</label>
+                        <input
+                          type="text"
+                          value={expData.audit_evidence_notes}
+                          onChange={(e) => setExpData({ ...expData, audit_evidence_notes: e.target.value })}
+                          placeholder="GST Verified & Goods Inspected"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl transition shadow-md"
+                    >
+                      + Submit Expense Bill for Audit in Database
+                    </button>
+                  </form>
+                ) : (
+                  <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-xs text-slate-400">
+                    <span>Resident View Only Mode: Audited expense bills and invoice proofs are listed below.</span>
+                  </div>
+                )}
 
                 {/* Expenses Table Toolbar */}
                 <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-900 rounded-xl border border-slate-800 text-xs">
@@ -1130,8 +1146,8 @@ export default function FestivalCelebrationsTab({
                             ₹ {exp.amount.toLocaleString("en-IN")}
                           </span>
 
-                          {/* Approval Controls */}
-                          {exp.approval_status !== "Approved" && (
+                          {/* Approval Controls (Admin / Super Admin Only) */}
+                          {canEdit && exp.approval_status !== "Approved" && (
                             <button
                               onClick={() => onUpdateExpenseStatus(exp.id, "Approved", "Vikram Patel (Treasurer)")}
                               className="text-[10px] font-bold bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-700 px-2 py-1 rounded"
@@ -1140,25 +1156,29 @@ export default function FestivalCelebrationsTab({
                             </button>
                           )}
 
-                          <button
-                            onClick={() => setEditingExpense(exp)}
-                            className="text-slate-400 hover:text-amber-300 p-1"
-                            title="Edit Expense"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </button>
+                          {canEdit && (
+                            <>
+                              <button
+                                onClick={() => setEditingExpense(exp)}
+                                className="text-slate-400 hover:text-amber-300 p-1"
+                                title="Edit Expense"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
 
-                          <button
-                            onClick={() => {
-                              if (confirm(`Delete expense bill "${exp.title}"?`)) {
-                                onDeleteExpense(exp.id);
-                              }
-                            }}
-                            className="text-slate-400 hover:text-rose-400 p-1"
-                            title="Delete Expense"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Delete expense bill "${exp.title}"?`)) {
+                                    onDeleteExpense(exp.id);
+                                  }
+                                }}
+                                className="text-slate-400 hover:text-rose-400 p-1"
+                                title="Delete Expense"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     ))

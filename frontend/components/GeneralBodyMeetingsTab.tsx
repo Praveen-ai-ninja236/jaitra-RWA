@@ -149,13 +149,15 @@ export default function GeneralBodyMeetingsTab({
           </p>
         </div>
 
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-500 hover:to-sky-400 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-sky-500/20 transition transform active:scale-95 hover:scale-[1.02]"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Record New GBM / Meeting</span>
-        </button>
+        {canEdit && (
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-500 hover:to-sky-400 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-sky-500/20 transition transform active:scale-95 hover:scale-[1.02]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Record New GBM / Meeting</span>
+          </button>
+        )}
       </div>
 
       {/* Filters Bar */}
@@ -261,13 +263,15 @@ export default function GeneralBodyMeetingsTab({
 
                   {/* Actions Right */}
                   <div className="flex items-center gap-2 self-end md:self-start">
-                    <button
-                      onClick={() => setEditingMeeting(m)}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-300 hover:text-white bg-sky-500/20 hover:bg-sky-500/30 px-3 py-1.5 rounded-lg border border-sky-400/40 transition"
-                    >
-                      <Edit className="w-3.5 h-3.5" />
-                      <span>Edit Meeting</span>
-                    </button>
+                    {canEdit && (
+                      <button
+                        onClick={() => setEditingMeeting(m)}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-300 hover:text-white bg-sky-500/20 hover:bg-sky-500/30 px-3 py-1.5 rounded-lg border border-sky-400/40 transition"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                        <span>Edit Meeting</span>
+                      </button>
+                    )}
 
                     <button
                       onClick={() => toggleExpand(m.id)}
@@ -277,17 +281,19 @@ export default function GeneralBodyMeetingsTab({
                       {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                     </button>
 
-                    <button
-                      onClick={() => {
-                        if (confirm(`Delete record for "${m.meeting_title}"?`)) {
-                          onDeleteMeeting(m.id);
-                        }
-                      }}
-                      title="Delete Record"
-                      className="text-slate-500 hover:text-rose-400 p-1.5 transition"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {canEdit && (
+                      <button
+                        onClick={() => {
+                          if (confirm(`Delete record for "${m.meeting_title}"?`)) {
+                            onDeleteMeeting(m.id);
+                          }
+                        }}
+                        title="Delete Record"
+                        className="text-slate-500 hover:text-rose-400 p-1.5 transition"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
 

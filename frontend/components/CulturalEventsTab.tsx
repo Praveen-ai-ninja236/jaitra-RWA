@@ -290,13 +290,15 @@ export default function CulturalEventsTab({
           </p>
         </div>
 
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-indigo-500/20 transition transform active:scale-95 hover:scale-[1.02]"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Schedule New Event</span>
-        </button>
+        {canEdit && (
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-indigo-500/20 transition transform active:scale-95 hover:scale-[1.02]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Schedule New Event</span>
+          </button>
+        )}
       </div>
 
       {/* Filters Bar */}
@@ -390,29 +392,33 @@ export default function CulturalEventsTab({
                         {event.status}
                       </span>
 
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingEvent(event);
-                        }}
-                        title="Edit Event"
-                        className="text-slate-400 hover:text-amber-300 p-1.5 bg-slate-800/80 rounded-lg border border-slate-700 transition"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
-                      </button>
+                      {canEdit && (
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingEvent(event);
+                            }}
+                            title="Edit Event"
+                            className="text-slate-400 hover:text-amber-300 p-1.5 bg-slate-800/80 rounded-lg border border-slate-700 transition"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
 
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`Delete cultural event "${event.title}"?`)) {
-                            onDeleteEvent(event.id);
-                          }
-                        }}
-                        title="Delete Event"
-                        className="text-slate-400 hover:text-rose-400 p-1.5 bg-slate-800/80 rounded-lg border border-slate-700 transition"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm(`Delete cultural event "${event.title}"?`)) {
+                                onDeleteEvent(event.id);
+                              }
+                            }}
+                            title="Delete Event"
+                            className="text-slate-400 hover:text-rose-400 p-1.5 bg-slate-800/80 rounded-lg border border-slate-700 transition"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -527,119 +533,127 @@ export default function CulturalEventsTab({
                 <span>Agenda &amp; Timeline ({currentAgendas.length})</span>
               </button>
 
-              <button
-                onClick={() => {
-                  setEditingEvent(currentEvent);
-                  setActiveEventDetail(null);
-                }}
-                className="px-3.5 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-white bg-slate-800"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>Edit Event Details</span>
-              </button>
+              {canEdit && (
+                <button
+                  onClick={() => {
+                    setEditingEvent(currentEvent);
+                    setActiveEventDetail(null);
+                  }}
+                  className="px-3.5 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-white bg-slate-800"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Edit Event Details</span>
+                </button>
+              )}
             </div>
 
             {/* TAB 1: PARTICIPANTS LIST & ADD FORM */}
             {detailTab === "participants" && (
               <div className="space-y-4">
-                {/* Add Participant Form */}
-                <form
-                  onSubmit={handleAddParticipantSubmit}
-                  className="p-4 bg-slate-950 rounded-xl border border-indigo-900/50 space-y-3"
-                >
-                  <h4 className="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
-                    <UserPlus className="w-3.5 h-3.5" />
-                    <span>Register Participant by Tower &amp; Activity</span>
-                  </h4>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
-                    <div>
-                      <DynamicSelect
-                        label="Tower"
-                        required
-                        value={partData.tower}
-                        onChange={(val) => setPartData({ ...partData, tower: val })}
-                        options={defaultTowers}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Flat No *</label>
-                      <input
-                        type="text"
-                        required
-                        value={partData.flat_no}
-                        onChange={(e) => setPartData({ ...partData, flat_no: e.target.value })}
-                        placeholder="e.g. 502"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Participant Name *</label>
-                      <input
-                        type="text"
-                        required
-                        value={partData.participant_name}
-                        onChange={(e) => setPartData({ ...partData, participant_name: e.target.value })}
-                        placeholder="e.g. Ananya Sen / Arjun"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <div>
-                      <DynamicSelect
-                        label="Age Category"
-                        value={partData.age_group}
-                        onChange={(val) => setPartData({ ...partData, age_group: val })}
-                        options={defaultAgeGroups}
-                      />
-                    </div>
-
-                    <div className="col-span-2">
-                      <DynamicSelect
-                        label="Participating For Activity"
-                        required
-                        value={partData.activity_category}
-                        onChange={(val) => setPartData({ ...partData, activity_category: val })}
-                        options={defaultActivityCategories}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Contact Phone</label>
-                      <input
-                        type="text"
-                        value={partData.contact_no}
-                        onChange={(e) => setPartData({ ...partData, contact_no: e.target.value })}
-                        placeholder="+91 98450 11223"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Special Notes / Seed</label>
-                      <input
-                        type="text"
-                        value={partData.notes}
-                        onChange={(e) => setPartData({ ...partData, notes: e.target.value })}
-                        placeholder="Song track provided / Doubles partner"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-md"
+                {/* Add Participant Form (Admin / Super Admin Only) */}
+                {canEdit ? (
+                  <form
+                    onSubmit={handleAddParticipantSubmit}
+                    className="p-4 bg-slate-950 rounded-xl border border-indigo-900/50 space-y-3"
                   >
-                    + Add Participant to Database
-                  </button>
-                </form>
+                    <h4 className="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Register Participant by Tower &amp; Activity</span>
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                      <div>
+                        <DynamicSelect
+                          label="Tower"
+                          required
+                          value={partData.tower}
+                          onChange={(val) => setPartData({ ...partData, tower: val })}
+                          options={defaultTowers}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Flat No *</label>
+                        <input
+                          type="text"
+                          required
+                          value={partData.flat_no}
+                          onChange={(e) => setPartData({ ...partData, flat_no: e.target.value })}
+                          placeholder="e.g. 502"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Participant Name *</label>
+                        <input
+                          type="text"
+                          required
+                          value={partData.participant_name}
+                          onChange={(e) => setPartData({ ...partData, participant_name: e.target.value })}
+                          placeholder="e.g. Ananya Sen / Arjun"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <div>
+                        <DynamicSelect
+                          label="Age Category"
+                          value={partData.age_group}
+                          onChange={(val) => setPartData({ ...partData, age_group: val })}
+                          options={defaultAgeGroups}
+                        />
+                      </div>
+
+                      <div className="col-span-2">
+                        <DynamicSelect
+                          label="Participating For Activity"
+                          required
+                          value={partData.activity_category}
+                          onChange={(val) => setPartData({ ...partData, activity_category: val })}
+                          options={defaultActivityCategories}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Contact Phone</label>
+                        <input
+                          type="text"
+                          value={partData.contact_no}
+                          onChange={(e) => setPartData({ ...partData, contact_no: e.target.value })}
+                          placeholder="+91 98450 11223"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Special Notes / Seed</label>
+                        <input
+                          type="text"
+                          value={partData.notes}
+                          onChange={(e) => setPartData({ ...partData, notes: e.target.value })}
+                          placeholder="Song track provided / Doubles partner"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-md"
+                    >
+                      + Add Participant to Database
+                    </button>
+                  </form>
+                ) : (
+                  <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-xs text-slate-400">
+                    <span>Resident View Only Mode: Registered participant list is shown below.</span>
+                  </div>
+                )}
 
                 {/* Participants Table */}
                 <div className="overflow-x-auto max-h-60 overflow-y-auto">
@@ -676,26 +690,30 @@ export default function CulturalEventsTab({
                             </td>
                             <td className="p-2.5 font-mono text-slate-400">{p.contact_no || "—"}</td>
                             <td className="p-2.5 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
-                                <button
-                                  onClick={() => setEditingParticipant(p)}
-                                  className="text-slate-400 hover:text-amber-300 p-1"
-                                  title="Edit Participant"
-                                >
-                                  <Edit className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    if (confirm(`Remove participant ${p.participant_name}?`)) {
-                                      onDeleteParticipant(p.id);
-                                    }
-                                  }}
-                                  className="text-slate-400 hover:text-rose-400 p-1"
-                                  title="Delete Participant"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
+                              {canEdit ? (
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    onClick={() => setEditingParticipant(p)}
+                                    className="text-slate-400 hover:text-amber-300 p-1"
+                                    title="Edit Participant"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (confirm(`Remove participant ${p.participant_name}?`)) {
+                                        onDeleteParticipant(p.id);
+                                      }
+                                    }}
+                                    className="text-slate-400 hover:text-rose-400 p-1"
+                                    title="Delete Participant"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-[10px] text-slate-500 font-mono">Enrolled</span>
+                              )}
                             </td>
                           </tr>
                         ))
@@ -709,92 +727,98 @@ export default function CulturalEventsTab({
             {/* TAB 2: AGENDAS & SPEAKER TIMELINES */}
             {detailTab === "agenda" && (
               <div className="space-y-4">
-                {/* Add Agenda Slot Form */}
-                <form
-                  onSubmit={handleAddAgendaSubmit}
-                  className="p-4 bg-slate-950 rounded-xl border border-indigo-900/50 space-y-3"
-                >
-                  <h4 className="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add Speaker / Performance Timeline Slot</span>
-                  </h4>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Time Slot *</label>
-                      <input
-                        type="text"
-                        required
-                        value={agendaData.slot_time}
-                        onChange={(e) => setAgendaData({ ...agendaData, slot_time: e.target.value })}
-                        placeholder="e.g. 06:30 PM - 07:00 PM"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Performer / Speaker *</label>
-                      <input
-                        type="text"
-                        required
-                        value={agendaData.performer_or_speaker}
-                        onChange={(e) =>
-                          setAgendaData({ ...agendaData, performer_or_speaker: e.target.value })
-                        }
-                        placeholder="e.g. Tower C Classical Group"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Activity / Topic *</label>
-                      <input
-                        type="text"
-                        required
-                        value={agendaData.activity_topic}
-                        onChange={(e) =>
-                          setAgendaData({ ...agendaData, activity_topic: e.target.value })
-                        }
-                        placeholder="e.g. Carnatic Vocal Medley"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Stage Coordinator</label>
-                      <input
-                        type="text"
-                        value={agendaData.stage_coordinator}
-                        onChange={(e) =>
-                          setAgendaData({ ...agendaData, stage_coordinator: e.target.value })
-                        }
-                        placeholder="e.g. Radhika Nambiar"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Duration (Mins)</label>
-                      <input
-                        type="number"
-                        value={agendaData.duration_mins}
-                        onChange={(e) =>
-                          setAgendaData({ ...agendaData, duration_mins: parseInt(e.target.value) || 30 })
-                        }
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-md"
+                {/* Add Agenda Slot Form (Admin / Super Admin Only) */}
+                {canEdit ? (
+                  <form
+                    onSubmit={handleAddAgendaSubmit}
+                    className="p-4 bg-slate-950 rounded-xl border border-indigo-900/50 space-y-3"
                   >
-                    + Add Agenda Timeline Slot
-                  </button>
-                </form>
+                    <h4 className="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Speaker / Performance Timeline Slot</span>
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Time Slot *</label>
+                        <input
+                          type="text"
+                          required
+                          value={agendaData.slot_time}
+                          onChange={(e) => setAgendaData({ ...agendaData, slot_time: e.target.value })}
+                          placeholder="e.g. 06:30 PM - 07:00 PM"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Performer / Speaker *</label>
+                        <input
+                          type="text"
+                          required
+                          value={agendaData.performer_or_speaker}
+                          onChange={(e) =>
+                            setAgendaData({ ...agendaData, performer_or_speaker: e.target.value })
+                          }
+                          placeholder="e.g. Tower C Classical Group"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Activity / Topic *</label>
+                        <input
+                          type="text"
+                          required
+                          value={agendaData.activity_topic}
+                          onChange={(e) =>
+                            setAgendaData({ ...agendaData, activity_topic: e.target.value })
+                          }
+                          placeholder="e.g. Carnatic Vocal Medley"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Stage Coordinator</label>
+                        <input
+                          type="text"
+                          value={agendaData.stage_coordinator}
+                          onChange={(e) =>
+                            setAgendaData({ ...agendaData, stage_coordinator: e.target.value })
+                          }
+                          placeholder="e.g. Radhika Nambiar"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Duration (Mins)</label>
+                        <input
+                          type="number"
+                          value={agendaData.duration_mins}
+                          onChange={(e) =>
+                            setAgendaData({ ...agendaData, duration_mins: parseInt(e.target.value) || 30 })
+                          }
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-md"
+                    >
+                      + Add Agenda Timeline Slot
+                    </button>
+                  </form>
+                ) : (
+                  <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-xs text-slate-400">
+                    <span>Resident View Only Mode: Event schedule and speaker timeline are listed below.</span>
+                  </div>
+                )}
 
                 {/* Agenda Timeline Cards */}
                 <div className="space-y-2.5 max-h-64 overflow-y-auto">
@@ -820,24 +844,30 @@ export default function CulturalEventsTab({
                         </div>
 
                         <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => setEditingAgenda(ag)}
-                            className="text-slate-400 hover:text-amber-300 p-1"
-                            title="Edit Agenda"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (confirm(`Remove agenda slot "${ag.activity_topic}"?`)) {
-                                onDeleteAgenda(ag.id);
-                              }
-                            }}
-                            className="text-slate-400 hover:text-rose-400 p-1"
-                            title="Delete Agenda"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {canEdit ? (
+                            <>
+                              <button
+                                onClick={() => setEditingAgenda(ag)}
+                                className="text-slate-400 hover:text-amber-300 p-1"
+                                title="Edit Agenda"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Remove agenda slot "${ag.activity_topic}"?`)) {
+                                    onDeleteAgenda(ag.id);
+                                  }
+                                }}
+                                className="text-slate-400 hover:text-rose-400 p-1"
+                                title="Delete Agenda"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-[10px] text-slate-500 font-mono">Scheduled</span>
+                          )}
                         </div>
                       </div>
                     ))

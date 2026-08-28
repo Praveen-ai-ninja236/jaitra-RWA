@@ -9,14 +9,11 @@ import {
   RefreshCw,
   User,
   Shield,
-  MessageCircle,
-  Share2,
   Settings,
   Menu,
   X,
   Crown,
   Lock,
-  ChevronDown,
 } from "lucide-react";
 import { AppUser, UserRole } from "../lib/types";
 
@@ -27,7 +24,6 @@ interface NavbarProps {
   currentUser: AppUser | null;
   onLoginSuccess: (user: AppUser) => void;
   onLogout: () => void;
-  onOpenSettings?: () => void;
 }
 
 export default function Navbar({
@@ -59,57 +55,14 @@ export default function Navbar({
             </div>
           </div>
 
-          {/* Right: Desktop Actions & Social Icons */}
+          {/* Right: Desktop Actions */}
           <div className="hidden md:flex items-center gap-2 lg:gap-3">
-            {/* Social Media Links */}
-            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-slate-800/80 rounded-xl border border-slate-700/70">
-              <span className="text-[10px] font-bold text-slate-400 mr-1 flex items-center gap-1">
-                <Share2 className="w-3 h-3 text-slate-400" /> Connect:
-              </span>
-              <a
-                href="https://chat.whatsapp.com/jaitra-residents"
-                target="_blank"
-                rel="noreferrer"
-                title="Join WhatsApp Community"
-                className="w-7 h-7 rounded-lg bg-emerald-950/80 hover:bg-emerald-800 text-emerald-400 hover:text-white border border-emerald-700/60 flex items-center justify-center transition"
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-              </a>
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noreferrer"
-                title="Facebook"
-                className="w-7 h-7 rounded-lg bg-blue-950/80 hover:bg-blue-800 text-blue-400 hover:text-white border border-blue-700/60 flex items-center justify-center transition font-bold text-xs"
-              >
-                f
-              </a>
-              <a
-                href="https://x.com"
-                target="_blank"
-                rel="noreferrer"
-                title="𝕏 / Twitter"
-                className="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 flex items-center justify-center transition font-bold text-xs"
-              >
-                𝕏
-              </a>
-              <a
-                href="https://youtube.com"
-                target="_blank"
-                rel="noreferrer"
-                title="YouTube"
-                className="w-7 h-7 rounded-lg bg-red-950/80 hover:bg-red-800 text-red-400 hover:text-white border border-red-700/60 flex items-center justify-center transition font-bold text-xs"
-              >
-                ▶
-              </a>
-            </div>
-
             {/* Sync DB Button */}
             <button
               onClick={onRefresh}
               disabled={isLoading}
               title="Sync latest live database records"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-slate-300 bg-slate-800/90 hover:bg-slate-700 hover:text-white border border-slate-700 rounded-xl transition shadow-xs disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-300 bg-slate-800/90 hover:bg-slate-700 hover:text-white border border-slate-700 rounded-xl transition shadow-xs disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-sky-400" : "text-slate-400"}`} />
               <span>Sync DB</span>
@@ -117,7 +70,7 @@ export default function Navbar({
 
             {/* Neon DB Status */}
             <div
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border transition ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition ${
                 isBackendConnected
                   ? "bg-emerald-950/70 text-emerald-300 border-emerald-700/60 shadow-[0_0_12px_-3px_rgba(16,185,129,0.4)]"
                   : "bg-amber-950/70 text-amber-300 border-amber-700/60"
@@ -126,7 +79,7 @@ export default function Navbar({
               {isBackendConnected ? (
                 <>
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Neon DB</span>
+                  <span>Neon DB Live</span>
                 </>
               ) : (
                 <>
@@ -237,7 +190,7 @@ export default function Navbar({
               </span>
             </div>
 
-            {currentUser && (
+            {currentUser ? (
               <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex items-center justify-between text-xs">
                 <div>
                   <p className="font-bold text-white">{currentUser.name}</p>
@@ -247,37 +200,28 @@ export default function Navbar({
                   {currentUser.role}
                 </span>
               </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsAuthOpen(true);
+                }}
+                className="w-full py-2.5 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow"
+              >
+                Sign In / Register
+              </button>
             )}
 
-            <div className="flex items-center justify-between gap-2 pt-1">
-              <span className="text-xs text-slate-400">Social Communities:</span>
-              <div className="flex items-center gap-2">
-                <a
-                  href="https://chat.whatsapp.com/jaitra-residents"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-8 h-8 rounded-lg bg-emerald-950 text-emerald-400 border border-emerald-700 flex items-center justify-center"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                </a>
-                <a
-                  href="https://facebook.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-8 h-8 rounded-lg bg-blue-950 text-blue-400 border border-blue-700 flex items-center justify-center font-bold text-xs"
-                >
-                  f
-                </a>
-                <a
-                  href="https://x.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-8 h-8 rounded-lg bg-slate-950 text-slate-300 border border-slate-700 flex items-center justify-center font-bold text-xs"
-                >
-                  𝕏
-                </a>
-              </div>
-            </div>
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                setIsSettingsOpen(true);
+              }}
+              className="w-full flex items-center justify-center gap-2 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs rounded-xl"
+            >
+              <Settings className="w-4 h-4 text-amber-400" />
+              <span>Dropdown &amp; System Settings</span>
+            </button>
           </div>
         )}
       </header>

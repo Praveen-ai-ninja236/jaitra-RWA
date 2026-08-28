@@ -39,7 +39,7 @@ export default function TeamListTab({
   isLoading,
   userRole = "Super Admin",
 }: TeamListTabProps) {
-  const canEdit = userRole === "Super Admin" || userRole === "Admin";
+  const canEditTeam = userRole === "Super Admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTower, setSelectedTower] = useState("All");
   const [selectedSubCommittee, setSelectedSubCommittee] = useState("All");
@@ -185,13 +185,15 @@ export default function TeamListTab({
           </p>
         </div>
 
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition transform active:scale-95 hover:scale-[1.02]"
-        >
-          <UserPlus className="w-4 h-4" />
-          <span>Add Committee Member</span>
-        </button>
+        {canEditTeam && (
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition transform active:scale-95 hover:scale-[1.02]"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Add Committee Member</span>
+          </button>
+        )}
       </div>
 
       {/* Search and Filters */}
@@ -285,26 +287,28 @@ export default function TeamListTab({
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => setEditingMember(member)}
-                          title="Edit Member"
-                          className="text-slate-400 hover:text-amber-300 p-1 transition"
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm(`Remove "${member.name}" from committee?`)) {
-                              onDeleteMember(member.id);
-                            }
-                          }}
-                          title="Remove Member"
-                          className="text-slate-400 hover:text-rose-400 p-1 transition"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      {canEditTeam && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setEditingMember(member)}
+                            title="Edit Member"
+                            className="text-slate-400 hover:text-amber-300 p-1 transition"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Remove "${member.name}" from committee?`)) {
+                                onDeleteMember(member.id);
+                              }
+                            }}
+                            title="Remove Member"
+                            className="text-slate-400 hover:text-rose-400 p-1 transition"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Sub-committee tag if present */}
@@ -364,125 +368,147 @@ export default function TeamListTab({
           )}
         </div>
 
-        {/* Quick Add Form on the Right Side */}
+        {/* Right Side: Quick Add Form (Super Admin Only) or Directory Info */}
         <div className="bg-slate-900/90 p-5 rounded-2xl shadow-xl border border-slate-800">
-          <div className="flex items-center gap-2 pb-3 mb-4 border-b border-slate-800">
-            <UserPlus className="w-4 h-4 text-emerald-400" />
-            <h3 className="text-sm font-extrabold text-white">Add Association Member</h3>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-3.5">
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-300 mb-1">Full Name *</label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., S. Ramesh Kumar"
-                className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <DynamicSelect
-                  label="Tower"
-                  required
-                  value={formData.tower || "Tower A"}
-                  onChange={(val) => {
-                    setFormData({ ...formData, tower: val, wing_flat: `${val} - 101` });
-                  }}
-                  options={defaultTowers}
-                />
+          {canEditTeam ? (
+            <>
+              <div className="flex items-center gap-2 pb-3 mb-4 border-b border-slate-800">
+                <UserPlus className="w-4 h-4 text-emerald-400" />
+                <h3 className="text-sm font-extrabold text-white">Add Association Member</h3>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-300 mb-1">Flat Details *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.wing_flat}
-                  onChange={(e) => setFormData({ ...formData, wing_flat: e.target.value })}
-                  placeholder="e.g., Tower B - 604"
-                  className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
-                />
+              <form onSubmit={handleSubmit} className="space-y-3.5">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="e.g., S. Ramesh Kumar"
+                    className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <DynamicSelect
+                      label="Tower"
+                      required
+                      value={formData.tower || "Tower A"}
+                      onChange={(val) => {
+                        setFormData({ ...formData, tower: val, wing_flat: `${val} - 101` });
+                      }}
+                      options={defaultTowers}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">Flat Details *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.wing_flat}
+                      onChange={(e) => setFormData({ ...formData, wing_flat: e.target.value })}
+                      placeholder="e.g., Tower B - 604"
+                      className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <DynamicSelect
+                    label="Designation / Role"
+                    required
+                    value={formData.role}
+                    onChange={(val) => setFormData({ ...formData, role: val })}
+                    options={defaultRoles}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">Contact Number *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.contact}
+                    onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+                    placeholder="e.g., +91 98450 99887"
+                    className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">Official Email</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="e.g., ramesh@jaitra.org"
+                    className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <DynamicSelect
+                    label="Sub-Committee Portfolio"
+                    value={formData.sub_committee || "Community Welfare"}
+                    onChange={(val) => setFormData({ ...formData, sub_committee: val })}
+                    options={defaultSubCommittees}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">Term</label>
+                    <input
+                      type="text"
+                      value={formData.term}
+                      onChange={(e) => setFormData({ ...formData, term: e.target.value })}
+                      placeholder="2025-2027"
+                      className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <DynamicSelect
+                      label="Status"
+                      value={formData.status || "Active"}
+                      onChange={(val) => setFormData({ ...formData, status: val })}
+                      options={["Active", "Emeritus", "Ex-Officio"]}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2 disabled:opacity-50 mt-4"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>{isSubmitting ? "Saving..." : "Save Member to Live DB"}</span>
+                </button>
+              </form>
+            </>
+          ) : (
+            <div className="space-y-4 text-xs">
+              <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
+                <Shield className="w-4 h-4 text-sky-400" />
+                <h3 className="text-sm font-extrabold text-white">Association Governance</h3>
               </div>
-            </div>
-
-            <div>
-              <DynamicSelect
-                label="Designation / Role"
-                required
-                value={formData.role}
-                onChange={(val) => setFormData({ ...formData, role: val })}
-                options={defaultRoles}
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-300 mb-1">Contact Number *</label>
-              <input
-                type="text"
-                required
-                value={formData.contact}
-                onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-                placeholder="e.g., +91 98450 99887"
-                className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-300 mb-1">Official Email</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="e.g., ramesh@jaitra.org"
-                className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-
-            <div>
-              <DynamicSelect
-                label="Sub-Committee Portfolio"
-                value={formData.sub_committee || "Community Welfare"}
-                onChange={(val) => setFormData({ ...formData, sub_committee: val })}
-                options={defaultSubCommittees}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-300 mb-1">Term</label>
-                <input
-                  type="text"
-                  value={formData.term}
-                  onChange={(e) => setFormData({ ...formData, term: e.target.value })}
-                  placeholder="2025-2027"
-                  className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white"
-                />
+              <p className="text-slate-300 leading-relaxed">
+                The Managing Committee (2025-2027) oversees society operations across all 6 towers, infrastructure maintenance, festival funds, and builder handover tasks.
+              </p>
+              <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 space-y-1.5 text-slate-400 text-[11px]">
+                <p><strong>Official Contact:</strong> <span className="text-sky-300">jaitra-association-hyd@googlegroups.com</span></p>
+                <p><strong>General Body Meetings:</strong> Held quarterly in Clubhouse Grand Banquet Hall</p>
+                <p><strong>Elections &amp; Tenure:</strong> 2-year terms per registered bye-laws</p>
               </div>
-
-              <div>
-                <DynamicSelect
-                  label="Status"
-                  value={formData.status || "Active"}
-                  onChange={(val) => setFormData({ ...formData, status: val })}
-                  options={["Active", "Emeritus", "Ex-Officio"]}
-                />
-              </div>
+              <p className="text-[11px] text-slate-500 italic">
+                Note: Addition, editing, or removal of committee members is authorized exclusively for Super Admin.
+              </p>
             </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2 disabled:opacity-50 mt-4"
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>{isSubmitting ? "Saving..." : "Save Member to Live DB"}</span>
-            </button>
-          </form>
+          )}
         </div>
       </div>
 

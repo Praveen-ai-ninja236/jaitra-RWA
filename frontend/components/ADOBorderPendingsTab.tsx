@@ -326,14 +326,16 @@ export default function ADOBorderPendingsTab({
             </button>
           </div>
 
-          {/* Add Work Item Button */}
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs sm:text-sm font-extrabold px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 transition transform active:scale-95 hover:scale-[1.02]"
-          >
-            <Plus className="w-4 h-4 text-slate-950" />
-            <span>New ADO Work Item</span>
-          </button>
+          {/* Add Work Item Button (Admin / Super Admin Only) */}
+          {canEdit && (
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs sm:text-sm font-extrabold px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 transition transform active:scale-95 hover:scale-[1.02]"
+            >
+              <Plus className="w-4 h-4 text-slate-950" />
+              <span>New ADO Work Item</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -451,25 +453,29 @@ export default function ADOBorderPendingsTab({
                                 {task.assigned_to}
                               </span>
 
-                              <button
-                                onClick={() => setEditingTask(task)}
-                                title="Edit ADO Item"
-                                className="text-slate-500 hover:text-amber-300 p-0.5 transition"
-                              >
-                                <Edit className="w-3.5 h-3.5" />
-                              </button>
+                              {canEdit && (
+                                <>
+                                  <button
+                                    onClick={() => setEditingTask(task)}
+                                    title="Edit ADO Item"
+                                    className="text-slate-500 hover:text-amber-300 p-0.5 transition"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </button>
 
-                              <button
-                                onClick={() => {
-                                  if (confirm(`Delete deliverable "${task.title}"?`)) {
-                                    onDeleteTask(task.id);
-                                  }
-                                }}
-                                title="Delete ADO Item"
-                                className="text-slate-500 hover:text-rose-400 p-0.5 transition"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                                  <button
+                                    onClick={() => {
+                                      if (confirm(`Delete deliverable "${task.title}"?`)) {
+                                        onDeleteTask(task.id);
+                                      }
+                                    }}
+                                    title="Delete ADO Item"
+                                    className="text-slate-500 hover:text-rose-400 p-0.5 transition"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </div>
 
@@ -572,30 +578,32 @@ export default function ADOBorderPendingsTab({
                             </div>
                           </div>
 
-                          {/* Navigation Buttons */}
-                          <div className="mt-3 pt-2 border-t border-slate-800 flex items-center justify-between gap-1">
-                            {prevSt ? (
-                              <button
-                                onClick={() => onUpdateStatus(task.id, prevSt)}
-                                className="text-[10px] font-semibold text-slate-400 hover:text-white flex items-center gap-0.5 px-2 py-1 rounded hover:bg-slate-800 transition"
-                              >
-                                <ChevronLeft className="w-3 h-3" />
-                                <span>{prevSt}</span>
-                              </button>
-                            ) : (
-                              <div />
-                            )}
+                          {/* Navigation Buttons (Admin / Super Admin Only) */}
+                          {canEdit && (
+                            <div className="mt-3 pt-2 border-t border-slate-800 flex items-center justify-between gap-1">
+                              {prevSt ? (
+                                <button
+                                  onClick={() => onUpdateStatus(task.id, prevSt)}
+                                  className="text-[10px] font-semibold text-slate-400 hover:text-white flex items-center gap-0.5 px-2 py-1 rounded hover:bg-slate-800 transition"
+                                >
+                                  <ChevronLeft className="w-3 h-3" />
+                                  <span>{prevSt}</span>
+                                </button>
+                              ) : (
+                                <div />
+                              )}
 
-                            {nextSt && (
-                              <button
-                                onClick={() => onUpdateStatus(task.id, nextSt)}
-                                className="text-[10px] font-bold text-sky-300 hover:text-white hover:bg-sky-500/20 flex items-center gap-0.5 px-2.5 py-1 rounded border border-sky-400/30 transition ml-auto"
-                              >
-                                <span>Move to {nextSt}</span>
-                                <ChevronRight className="w-3 h-3" />
-                              </button>
-                            )}
-                          </div>
+                              {nextSt && (
+                                <button
+                                  onClick={() => onUpdateStatus(task.id, nextSt)}
+                                  className="text-[10px] font-bold text-sky-300 hover:text-white hover:bg-sky-500/20 flex items-center gap-0.5 px-2.5 py-1 rounded border border-sky-400/30 transition ml-auto"
+                                >
+                                  <span>Move to {nextSt}</span>
+                                  <ChevronRight className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       );
                     })
@@ -761,24 +769,28 @@ export default function ADOBorderPendingsTab({
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
                           </button>
-                          <button
-                            onClick={() => setEditingTask(t)}
-                            className="p-1 text-slate-400 hover:text-amber-300"
-                            title="Edit Deliverable"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (confirm(`Delete deliverable "${t.title}"?`)) {
-                                onDeleteTask(t.id);
-                              }
-                            }}
-                            className="p-1 text-slate-400 hover:text-rose-400"
-                            title="Delete Deliverable"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {canEdit && (
+                            <>
+                              <button
+                                onClick={() => setEditingTask(t)}
+                                className="p-1 text-slate-400 hover:text-amber-300"
+                                title="Edit Deliverable"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Delete deliverable "${t.title}"?`)) {
+                                    onDeleteTask(t.id);
+                                  }
+                                }}
+                                className="p-1 text-slate-400 hover:text-rose-400"
+                                title="Delete Deliverable"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -826,16 +838,18 @@ export default function ADOBorderPendingsTab({
                 <span>Evidence &amp; Test Proofs ({currentAttachments.length})</span>
               </button>
 
-              <button
-                onClick={() => {
-                  setEditingTask(currentTask);
-                  setActiveTaskDetail(null);
-                }}
-                className="px-3.5 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-white bg-slate-800"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>Edit Work Item</span>
-              </button>
+              {canEdit && (
+                <button
+                  onClick={() => {
+                    setEditingTask(currentTask);
+                    setActiveTaskDetail(null);
+                  }}
+                  className="px-3.5 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-white bg-slate-800"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Edit Work Item</span>
+                </button>
+              )}
             </div>
 
             {/* TAB 1: DISCUSSION THREAD */}
@@ -919,71 +933,77 @@ export default function ADOBorderPendingsTab({
             {/* TAB 2: EVIDENCE ATTACHMENTS */}
             {taskDetailTab === "evidence" && (
               <div className="space-y-4">
-                {/* Upload Evidence Form */}
-                <form
-                  onSubmit={handleAddAttachmentSubmit}
-                  className="p-4 bg-slate-950 rounded-xl border border-amber-900/40 space-y-3"
-                >
-                  <h4 className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                    <Paperclip className="w-3.5 h-3.5" />
-                    <span>Attach Inspection Report / Defect Photo / Test Certificate</span>
-                  </h4>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Document / Proof Title *</label>
-                      <input
-                        type="text"
-                        required
-                        value={attData.file_name}
-                        onChange={(e) => setAttData({ ...attData, file_name: e.target.value })}
-                        placeholder="e.g. PU_Injection_Test_Report_B2.pdf"
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Uploaded By</label>
-                      <input
-                        type="text"
-                        value={attData.uploaded_by}
-                        onChange={(e) => setAttData({ ...attData, uploaded_by: e.target.value })}
-                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* File Upload Input */}
-                  <FileUploadInput
-                    label="Upload File / Document Proof"
-                    value={attData.file_url}
-                    onChange={(dataUrl, name) =>
-                      setAttData({
-                        ...attData,
-                        file_url: dataUrl,
-                        file_name: attData.file_name || name,
-                      })
-                    }
-                  />
-
-                  <div>
-                    <label className="block text-[10px] font-semibold text-slate-400 mb-1">Description / Summary</label>
-                    <input
-                      type="text"
-                      value={attData.description || ""}
-                      onChange={(e) => setAttData({ ...attData, description: e.target.value })}
-                      placeholder="e.g. Signed inspection report with Builder engineers"
-                      className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs rounded-xl transition shadow-md"
+                {/* Upload Evidence Form (Admin / Super Admin Only) */}
+                {canEdit ? (
+                  <form
+                    onSubmit={handleAddAttachmentSubmit}
+                    className="p-4 bg-slate-950 rounded-xl border border-amber-900/40 space-y-3"
                   >
-                    + Attach Evidence Document in Database
-                  </button>
-                </form>
+                    <h4 className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                      <Paperclip className="w-3.5 h-3.5" />
+                      <span>Attach Inspection Report / Defect Photo / Test Certificate</span>
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Document / Proof Title *</label>
+                        <input
+                          type="text"
+                          required
+                          value={attData.file_name}
+                          onChange={(e) => setAttData({ ...attData, file_name: e.target.value })}
+                          placeholder="e.g. PU_Injection_Test_Report_B2.pdf"
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Uploaded By</label>
+                        <input
+                          type="text"
+                          value={attData.uploaded_by}
+                          onChange={(e) => setAttData({ ...attData, uploaded_by: e.target.value })}
+                          className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* File Upload Input */}
+                    <FileUploadInput
+                      label="Upload File / Document Proof"
+                      value={attData.file_url}
+                      onChange={(dataUrl, name) =>
+                        setAttData({
+                          ...attData,
+                          file_url: dataUrl,
+                          file_name: attData.file_name || name,
+                        })
+                      }
+                    />
+
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Description / Summary</label>
+                      <input
+                        type="text"
+                        value={attData.description || ""}
+                        onChange={(e) => setAttData({ ...attData, description: e.target.value })}
+                        placeholder="e.g. Signed inspection report with Builder engineers"
+                        className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs rounded-xl transition shadow-md"
+                    >
+                      + Attach Evidence Document in Database
+                    </button>
+                  </form>
+                ) : (
+                  <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-xs text-slate-400">
+                    <span>Resident View Only Mode: Inspection reports, defect photos, and test certificates are available below.</span>
+                  </div>
+                )}
 
                 {/* Evidence List */}
                 <div className="space-y-2.5 max-h-60 overflow-y-auto">
@@ -1013,12 +1033,14 @@ export default function ADOBorderPendingsTab({
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => onDeleteAttachment(att.id)}
-                          className="text-slate-500 hover:text-rose-400 p-1"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {canEdit && (
+                          <button
+                            onClick={() => onDeleteAttachment(att.id)}
+                            className="text-slate-500 hover:text-rose-400 p-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     ))
                   )}

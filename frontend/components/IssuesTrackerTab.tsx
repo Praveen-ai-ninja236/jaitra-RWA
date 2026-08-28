@@ -266,13 +266,15 @@ export default function IssuesTrackerTab({
             </button>
           </div>
 
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-rose-500/20 transition transform active:scale-95 hover:scale-[1.02]"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Report Issue Ticket</span>
-          </button>
+          {canEdit && (
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-rose-500/20 transition transform active:scale-95 hover:scale-[1.02]"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Report Issue Ticket</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -502,37 +504,41 @@ export default function IssuesTrackerTab({
                                 </td>
 
                                 <td className="p-3 text-right whitespace-nowrap">
-                                  <div className="flex items-center justify-end gap-1.5">
-                                    {issue.status !== "Resolved" && (
+                                  {canEdit ? (
+                                    <div className="flex items-center justify-end gap-1.5">
+                                      {issue.status !== "Resolved" && (
+                                        <button
+                                          onClick={() => handleQuickStatusChange(issue, "Resolved")}
+                                          title="Mark Resolved"
+                                          className="text-[10px] font-bold bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-700 px-2 py-1 rounded"
+                                        >
+                                          Resolve
+                                        </button>
+                                      )}
+
                                       <button
-                                        onClick={() => handleQuickStatusChange(issue, "Resolved")}
-                                        title="Mark Resolved"
-                                        className="text-[10px] font-bold bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-700 px-2 py-1 rounded"
+                                        onClick={() => setEditingIssue(issue)}
+                                        title="Edit Ticket"
+                                        className="p-1 text-slate-400 hover:text-white"
                                       >
-                                        Resolve
+                                        <Edit className="w-3.5 h-3.5" />
                                       </button>
-                                    )}
 
-                                    <button
-                                      onClick={() => setEditingIssue(issue)}
-                                      title="Edit Ticket"
-                                      className="p-1 text-slate-400 hover:text-amber-300"
-                                    >
-                                      <Edit className="w-3.5 h-3.5" />
-                                    </button>
-
-                                    <button
-                                      onClick={() => {
-                                        if (confirm(`Delete ticket "${issue.title}"?`)) {
-                                          onDeleteIssue(issue.id);
-                                        }
-                                      }}
-                                      title="Delete Ticket"
-                                      className="p-1 text-slate-500 hover:text-rose-400"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
+                                      <button
+                                        onClick={() => {
+                                          if (confirm(`Delete ticket "${issue.title}"?`)) {
+                                            onDeleteIssue(issue.id);
+                                          }
+                                        }}
+                                        title="Delete Ticket"
+                                        className="p-1 text-slate-500 hover:text-rose-400"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <span className="text-[10px] text-slate-500 font-mono">Logged</span>
+                                  )}
                                 </td>
                               </tr>
                             ))}
@@ -645,17 +651,18 @@ export default function IssuesTrackerTab({
                       </td>
                       <td className="p-3 text-[11px]">{issue.assigned_to}</td>
                       <td className="p-3 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => setEditingIssue(issue)}
-                            className="p-1 text-slate-400 hover:text-amber-300"
-                            title="Edit Ticket"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (confirm(`Delete ticket "${issue.title}"?`)) {
+                        {canEdit ? (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => setEditingIssue(issue)}
+                              className="p-1 text-slate-400 hover:text-amber-300"
+                              title="Edit Ticket"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm(`Delete ticket "${issue.title}"?`)) {
                                 onDeleteIssue(issue.id);
                               }
                             }}
@@ -665,6 +672,9 @@ export default function IssuesTrackerTab({
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
+                        ) : (
+                          <span className="text-[10px] text-slate-500 font-mono">Logged</span>
+                        )}
                       </td>
                     </tr>
                   ))

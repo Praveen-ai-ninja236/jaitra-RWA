@@ -32,6 +32,7 @@ import {
   TeamMemberCreate,
   SocietyStats,
   AuditTransaction,
+  AppUser,
 } from "../lib/types";
 import * as api from "../lib/api";
 import {
@@ -62,16 +63,8 @@ export default function JaitraPortal() {
   const [adoTasks, setAdoTasks] = useState<ADOTask[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 
-  // User & Auth State (Super Admin, Admin, User)
-  const [currentUser, setCurrentUser] = useState<any>({
-    id: 1,
-    name: "Praveen Kumar",
-    email: "superadmin@jaitra.org",
-    role: "Super Admin",
-    tower: "Tower D",
-    flat_no: "704",
-    phone: "+91 96500 12389",
-  });
+  // User & Auth State (Defaults to null -> strict View Only for unauthenticated visitors)
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
 
   // Audit Report State
   const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
@@ -84,9 +77,18 @@ export default function JaitraPortal() {
     }, 4000);
   };
 
-  // Sync hash from URL if present
+  // Check stored auth session and sync hash from URL on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
+      try {
+        const storedUser = localStorage.getItem("jaitra_auth_user");
+        if (storedUser) {
+          setCurrentUser(JSON.parse(storedUser));
+        }
+      } catch (e) {
+        console.warn("Could not load stored auth user:", e);
+      }
+
       const hash = window.location.hash.replace("#", "");
       if (["culture-events", "festivals", "gbm", "issues", "ado-board", "team"].includes(hash)) {
         setActiveTab(hash);
@@ -545,11 +547,17 @@ export default function JaitraPortal() {
         currentUser={currentUser}
         onLoginSuccess={(user) => {
           setCurrentUser(user);
+          try {
+            localStorage.setItem("jaitra_auth_user", JSON.stringify(user));
+          } catch (e) {}
           showToast(`Welcome, ${user.name} (${user.role})!`);
         }}
         onLogout={() => {
           setCurrentUser(null);
-          showToast("Signed out. Switched to View Only (User) mode.");
+          try {
+            localStorage.removeItem("jaitra_auth_user");
+          } catch (e) {}
+          showToast("Signed out. Switched to View Only (Resident) mode.");
         }}
       />
 
@@ -694,18 +702,15 @@ export default function JaitraPortal() {
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-sky-400" />
             <span className="font-extrabold text-slate-200">Jaitra Residents Welfare Association</span>
-            <span>•</span>
-            <span className="text-slate-400">Towers A, B, C, D, E, F</span>
           </div>
           <div className="flex items-center gap-6">
-            <span className="flex items-center gap-1.5 text-slate-300">
+            <a
+              href="mailto:jaitra-association-hyd@googlegroups.com"
+              className="flex items-center gap-1.5 text-slate-300 hover:text-sky-400 transition"
+            >
               <Mail className="w-3.5 h-3.5 text-sky-400" />
-              <span>support@jaitra.org</span>
-            </span>
-            <span className="flex items-center gap-1.5 text-slate-300">
-              <Phone className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Estate Office: 040-2345-8811</span>
-            </span>
+              <span>jaitra-association-hyd@googlegroups.com</span>
+            </a>
           </div>
           <p className="text-[11px] text-slate-500">
             Powered by Next.js 14, React, TypeScript &amp; Neon Serverless PostgreSQL Database

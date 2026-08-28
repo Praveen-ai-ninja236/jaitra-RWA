@@ -37,9 +37,9 @@ export default function AuthModal({
 }: AuthModalProps) {
   const [tab, setTab] = useState<"signin" | "signup">("signin");
 
-  // Sign In State
-  const [signInEmail, setSignInEmail] = useState("superadmin@jaitra.org");
-  const [signInPassword, setSignInPassword] = useState("admin123");
+  // Sign In State (starts empty so user enters credentials)
+  const [signInEmail, setSignInEmail] = useState("");
+  const [signInPassword, setSignInPassword] = useState("");
 
   // Sign Up State
   const [name, setName] = useState("");

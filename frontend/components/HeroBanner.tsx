@@ -37,7 +37,7 @@ export default function HeroBanner({ stats, onSelectTab, onOpenAuditReport }: He
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-400/15 text-sky-300 text-xs font-bold uppercase tracking-wider mb-3 border border-sky-400/30 backdrop-blur-md shadow-xs">
               <Building className="w-3.5 h-3.5 text-sky-400" />
-              <span>Gated Community • Towers A, B, C, D, E, F</span>
+              <span>Gated Community Association</span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white leading-tight drop-shadow-sm">
