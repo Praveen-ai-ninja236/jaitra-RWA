@@ -126,13 +126,23 @@ export default function JaitraPortal() {
     }
   }, []);
 
-  // Redirect to public tab if on a restricted tab without auth
+  // Redirect to public tab if on a restricted tab without auth or if Staff visits unauthorized tab
   useEffect(() => {
-    const restrictedTabs = ["issues", "ado-board", "team", "vendor-management", "change-history"];
-    if (!currentUser && restrictedTabs.includes(activeTab)) {
-      setActiveTab("culture-events");
-      if (typeof window !== "undefined") {
-        window.location.hash = "culture-events";
+    if (!currentUser) {
+      const restrictedTabs = ["issues", "ado-board", "team", "vendor-management", "change-history"];
+      if (restrictedTabs.includes(activeTab)) {
+        setActiveTab("culture-events");
+        if (typeof window !== "undefined") {
+          window.location.hash = "culture-events";
+        }
+      }
+    } else if (currentUser.role === "Staff") {
+      const staffAllowedTabs = ["culture-events", "issues"];
+      if (!staffAllowedTabs.includes(activeTab)) {
+        setActiveTab("culture-events");
+        if (typeof window !== "undefined") {
+          window.location.hash = "culture-events";
+        }
       }
     }
   }, [currentUser, activeTab]);

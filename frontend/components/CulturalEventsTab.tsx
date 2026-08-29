@@ -76,7 +76,7 @@ export default function CulturalEventsTab({
   teamMembers = [],
 }: CulturalEventsTabProps) {
   const teamMemberNames = teamMembers.map((m) => m.name).filter(Boolean);
-  const canEdit = userRole === "Super Admin" || userRole === "Admin";
+  const canEdit = userRole === "Super Admin" || userRole === "Admin" || userRole === "Staff";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");

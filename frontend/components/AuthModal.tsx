@@ -16,6 +16,7 @@ import {
   Crown,
   Eye,
   AlertCircle,
+  Wrench,
 } from "lucide-react";
 import { AppUser, UserRole } from "../lib/types";
 import * as api from "../lib/api";
@@ -78,13 +79,16 @@ export default function AuthModal({
   const handleQuickSelect = (quickRole: UserRole) => {
     if (quickRole === "Super Admin") {
       setSignInEmail("superadmin@jaitra.org");
-      setSignInPassword("");
+      setSignInPassword("admin123");
     } else if (quickRole === "Admin") {
-      setSignInEmail("admin4u@jaitra.org");
-      setSignInPassword("");
+      setSignInEmail("admin@jaitra.org");
+      setSignInPassword("admin123");
+    } else if (quickRole === "Staff") {
+      setSignInEmail("staff@jaitra.org");
+      setSignInPassword("staff123");
     } else {
       setSignInEmail("resident@jaitra.org");
-      setSignInPassword("");
+      setSignInPassword("resident123");
     }
   };
 
@@ -180,6 +184,8 @@ export default function AuthModal({
                           ? "bg-amber-950 text-amber-300 border-amber-600"
                           : currentUser.role === "Admin"
                           ? "bg-indigo-950 text-indigo-300 border-indigo-600"
+                          : currentUser.role === "Staff"
+                          ? "bg-teal-950 text-teal-300 border-teal-600"
                           : "bg-slate-800 text-slate-300 border-slate-700"
                       }`}
                     >
@@ -202,16 +208,23 @@ export default function AuthModal({
                 </p>
                 {currentUser.role === "Super Admin" && (
                   <ul className="text-slate-300 space-y-1 list-disc pl-4 text-[11px]">
-                    <li><strong>All CRUD Permissions:</strong> Create, edit, delete across all 6 tabs</li>
+                    <li><strong>All CRUD Permissions:</strong> Create, edit, delete across all 8 tabs</li>
                     <li><strong>Settings Manager:</strong> Modify all dropdown categories in Neon DB</li>
                     <li><strong>User Management:</strong> Oversee roles and directory access</li>
                   </ul>
                 )}
                 {currentUser.role === "Admin" && (
                   <ul className="text-slate-300 space-y-1 list-disc pl-4 text-[11px]">
-                    <li><strong>All CRUD Permissions:</strong> Create, edit, delete across all 6 tabs</li>
+                    <li><strong>All CRUD Permissions:</strong> Create, edit, delete across all 8 tabs</li>
                     <li><strong>Audit Approvals:</strong> Approve or reject expense vouchers</li>
                     <li><em>Settings Manager is restricted to Super Admin</em></li>
+                  </ul>
+                )}
+                {currentUser.role === "Staff" && (
+                  <ul className="text-teal-200 space-y-1 list-disc pl-4 text-[11px]">
+                    <li><strong>Cultural Events:</strong> Full access to manage programs, participants & agendas</li>
+                    <li><strong>Community Issues:</strong> Limited to managing <strong>Clubhouse & Common Space</strong> tickets</li>
+                    <li><em>Residential Towers (A-F), Financials, GBMs, and ADO Board are restricted</em></li>
                   </ul>
                 )}
                 {currentUser.role === "User" && (
@@ -301,7 +314,7 @@ export default function AuthModal({
                     <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">
                       Quick Demo Profile Switcher
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       <button
                         type="button"
                         onClick={() => handleQuickSelect("Super Admin")}
@@ -319,13 +332,26 @@ export default function AuthModal({
                         type="button"
                         onClick={() => handleQuickSelect("Admin")}
                         className={`p-2 rounded-xl text-xs font-bold border text-center transition ${
-                          signInEmail.includes("treasurer")
+                          signInEmail.includes("admin@")
                             ? "bg-indigo-950/80 text-indigo-300 border-indigo-600 shadow-md"
                             : "bg-slate-800/80 text-slate-400 border-slate-700 hover:text-white"
                         }`}
                       >
                         <Shield className="w-3.5 h-3.5 mx-auto mb-1 text-indigo-400" />
                         <span>Admin</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleQuickSelect("Staff")}
+                        className={`p-2 rounded-xl text-xs font-bold border text-center transition ${
+                          signInEmail.includes("staff")
+                            ? "bg-teal-950/80 text-teal-300 border-teal-600 shadow-md"
+                            : "bg-slate-800/80 text-slate-400 border-slate-700 hover:text-white"
+                        }`}
+                      >
+                        <Wrench className="w-3.5 h-3.5 mx-auto mb-1 text-teal-400" />
+                        <span>Staff</span>
                       </button>
 
                       <button
@@ -338,7 +364,7 @@ export default function AuthModal({
                         }`}
                       >
                         <Eye className="w-3.5 h-3.5 mx-auto mb-1 text-emerald-400" />
-                        <span>User (View Only)</span>
+                        <span>Resident</span>
                       </button>
                     </div>
                   </div>
@@ -526,6 +552,7 @@ export default function AuthModal({
                         className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-slate-200 text-xs outline-none"
                       >
                         <option value="User">Resident (View Only)</option>
+                        <option value="Staff">Operations Staff (Clubhouse & Events)</option>
                         <option value="Admin">Committee Admin</option>
                         <option value="Super Admin">Super Admin</option>
                       </select>

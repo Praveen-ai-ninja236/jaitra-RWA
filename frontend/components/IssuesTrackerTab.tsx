@@ -60,7 +60,8 @@ export default function IssuesTrackerTab({
   teamMembers = [],
 }: IssuesTrackerTabProps) {
   const teamMemberNames = teamMembers.map((m) => m.name).filter(Boolean);
-  const canEdit = userRole === "Super Admin" || userRole === "Admin";
+  const isStaff = userRole === "Staff";
+  const canEdit = userRole === "Super Admin" || userRole === "Admin" || userRole === "Staff";
   
   // Navigation State: null means showing Tower Tiles Overview; a string like "Tower A" means drilled down into that tower
   const [selectedTower, setSelectedTower] = useState<string | null>(null);
@@ -82,13 +83,20 @@ export default function IssuesTrackerTab({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const defaultTowers = dropdownMap["towers"]?.length
+    ? dropdownMap["towers"]
+    : ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F", "Clubhouse", "Common Space"];
+
+  const staffTowers = ["Clubhouse", "Common Space"];
+  const effectiveTowers = isStaff ? staffTowers : defaultTowers;
+
   // Form State
   const [formData, setFormData] = useState<CommunityIssueCreate>({
     title: "",
-    tower: "Tower A",
-    flat_no: "101",
-    flat_or_location: "Tower A - Flat 101",
-    category: "Civil & Seepage",
+    tower: isStaff ? "Clubhouse" : "Tower A",
+    flat_no: isStaff ? "Clubhouse Facility" : "101",
+    flat_or_location: isStaff ? "Clubhouse Facility" : "Tower A - Flat 101",
+    category: "Common Amenities",
     reported_by: "",
     priority: "Medium",
     status: "Open",
@@ -98,10 +106,6 @@ export default function IssuesTrackerTab({
     resolution_notes: "",
     attachment_url: "",
   });
-
-  const defaultTowers = dropdownMap["towers"]?.length
-    ? dropdownMap["towers"]
-    : ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F", "Clubhouse", "Common Space"];
 
   const defaultCategories = dropdownMap["issue_categories"]?.length
     ? dropdownMap["issue_categories"]
@@ -214,7 +218,7 @@ export default function IssuesTrackerTab({
 
   // Comprehensive Tower Statistics for the Tiles
   const towerStats = useMemo(() => {
-    const list = defaultTowers.map((tower) => {
+    const list = effectiveTowers.map((tower) => {
       const towerIssues = issues.filter((iss) => iss.tower === tower);
       const openCount = towerIssues.filter(
         (iss) => iss.status === "Open"
@@ -239,22 +243,31 @@ export default function IssuesTrackerTab({
       };
     });
 
-    const totalAll = issues.length;
-    const totalOpen = issues.filter((i) => i.status === "Open").length;
-    const totalInProgress = issues.filter((i) => i.status === "In Progress" || i.status === "Under Inspection").length;
-    const totalResolved = issues.filter((i) => i.status === "Resolved" || i.status === "Closed").length;
-    const totalCritical = issues.filter((i) => i.priority === "Critical" && i.status !== "Resolved" && i.status !== "Closed").length;
+    const scopedIssues = isStaff
+      ? issues.filter((iss) => iss.tower === "Clubhouse" || iss.tower === "Common Space")
+      : issues;
+
+    const totalAll = scopedIssues.length;
+    const totalOpen = scopedIssues.filter((i) => i.status === "Open").length;
+    const totalInProgress = scopedIssues.filter((i) => i.status === "In Progress" || i.status === "Under Inspection").length;
+    const totalResolved = scopedIssues.filter((i) => i.status === "Resolved" || i.status === "Closed").length;
+    const totalCritical = scopedIssues.filter((i) => i.priority === "Critical" && i.status !== "Resolved" && i.status !== "Closed").length;
 
     return {
       all: { total: totalAll, open: totalOpen, inProgress: totalInProgress, resolved: totalResolved, critical: totalCritical },
       list,
     };
-  }, [issues, defaultTowers]);
+  }, [issues, effectiveTowers, isStaff]);
 
   // Filtered issues based on search, active tower drilldown, status, priority, and category
   const displayedIssues = useMemo(() => {
     return issues
       .filter((iss) => {
+        // If Staff role, strictly restrict to Clubhouse and Common Space
+        if (isStaff && iss.tower !== "Clubhouse" && iss.tower !== "Common Space") {
+          return false;
+        }
+
         // If a specific tower is selected, filter by that tower
         if (selectedTower && selectedTower !== "All" && iss.tower !== selectedTower) {
           return false;
@@ -406,6 +419,16 @@ export default function IssuesTrackerTab({
           )}
         </div>
       </div>
+
+      {/* Staff Scoped Access Banner */}
+      {isStaff && (
+        <div className="p-3.5 bg-teal-950/60 border border-teal-600/70 rounded-2xl flex items-center gap-2.5 text-xs text-teal-200 shadow-md">
+          <Wrench className="w-4 h-4 text-teal-400 shrink-0" />
+          <span>
+            <strong>Staff Operations Mode:</strong> You have active facility maintenance access scoped specifically to <strong>Clubhouse &amp; Common Space</strong> amenities.
+          </span>
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* LEVEL 1: TOWER TILES VIEW (When selectedTower === null)                     */}
@@ -603,7 +626,7 @@ export default function IssuesTrackerTab({
 
             {/* Quick Tower Switcher Buttons */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full scrollbar-none">
-              {defaultTowers.map((t) => (
+              {effectiveTowers.map((t) => (
                 <button
                   key={t}
                   onClick={() => setSelectedTower(t)}
@@ -616,16 +639,18 @@ export default function IssuesTrackerTab({
                   {t.replace("Tower ", "T-")}
                 </button>
               ))}
-              <button
-                onClick={() => setSelectedTower("All")}
-                className={`px-3 py-1 rounded-xl text-xs font-black transition whitespace-nowrap ${
-                  selectedTower === "All"
-                    ? "bg-rose-600 text-white shadow-md border border-rose-400"
-                    : "bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-700 border border-slate-700"
-                }`}
-              >
-                All
-              </button>
+              {!isStaff && (
+                <button
+                  onClick={() => setSelectedTower("All")}
+                  className={`px-3 py-1 rounded-xl text-xs font-black transition whitespace-nowrap ${
+                    selectedTower === "All"
+                      ? "bg-rose-600 text-white shadow-md border border-rose-400"
+                      : "bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-700 border border-slate-700"
+                  }`}
+                >
+                  All
+                </button>
+              )}
             </div>
           </div>
 
@@ -1192,7 +1217,7 @@ export default function IssuesTrackerTab({
                   label="Tower / Location"
                   value={editingIssue.tower}
                   onChange={(val) => setEditingIssue({ ...editingIssue, tower: val })}
-                  options={defaultTowers}
+                  options={effectiveTowers}
                 />
               </div>
 
@@ -1314,7 +1339,7 @@ export default function IssuesTrackerTab({
                 required
                 value={formData.tower}
                 onChange={(val) => setFormData({ ...formData, tower: val })}
-                options={defaultTowers}
+                options={effectiveTowers}
               />
             </div>
 

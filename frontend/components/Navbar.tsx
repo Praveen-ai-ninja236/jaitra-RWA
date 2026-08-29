@@ -135,6 +135,8 @@ export default function Navbar({
                         ? "bg-amber-500 text-slate-950"
                         : currentUser.role === "Admin"
                         ? "bg-indigo-950 text-indigo-300 border border-indigo-700"
+                        : currentUser.role === "Staff"
+                        ? "bg-teal-500 text-slate-950 font-black"
                         : "bg-slate-800 text-slate-400"
                     }`}
                   >

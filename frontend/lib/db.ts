@@ -1181,8 +1181,69 @@ export async function deleteDropdownOption(id: number): Promise<void> {
 }
 
 // ----------------- USER AUTHENTICATION & RBAC -----------------
+export async function ensureAppUsersTable(): Promise<void> {
+  try {
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS app_users (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'User',
+        tower TEXT DEFAULT 'Tower A',
+        flat_no TEXT DEFAULT '',
+        phone TEXT DEFAULT '',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    // Ensure Staff user exists
+    const staffCheck = await runQuery("SELECT id FROM app_users WHERE LOWER(email) = 'staff@jaitra.org'");
+    if (staffCheck.length === 0) {
+      await runQuery(`
+        INSERT INTO app_users (name, email, password, role, tower, flat_no, phone)
+        VALUES ('Jaitra Operations Staff', 'staff@jaitra.org', 'staff123', 'Staff', 'Clubhouse', 'Staff Desk', '+91 98450 00111')
+        ON CONFLICT (email) DO UPDATE SET role = 'Staff'
+      `);
+    }
+
+    // Ensure Super Admin user exists
+    const superCheck = await runQuery("SELECT id FROM app_users WHERE LOWER(email) = 'superadmin@jaitra.org'");
+    if (superCheck.length === 0) {
+      await runQuery(`
+        INSERT INTO app_users (name, email, password, role, tower, flat_no, phone)
+        VALUES ('Jaitra Super Admin', 'superadmin@jaitra.org', 'admin123', 'Super Admin', 'Tower A', '1204', '+91 98450 71001')
+        ON CONFLICT (email) DO UPDATE SET role = 'Super Admin'
+      `);
+    }
+
+    // Ensure Admin user exists
+    const adminCheck = await runQuery("SELECT id FROM app_users WHERE LOWER(email) = 'admin@jaitra.org' OR LOWER(email) = 'admin4u@jaitra.org'");
+    if (adminCheck.length === 0) {
+      await runQuery(`
+        INSERT INTO app_users (name, email, password, role, tower, flat_no, phone)
+        VALUES ('Jaitra Admin Officer', 'admin@jaitra.org', 'admin123', 'Admin', 'Tower B', '501', '+91 97411 98765')
+        ON CONFLICT (email) DO UPDATE SET role = 'Admin'
+      `);
+    }
+
+    // Ensure Resident user exists
+    const residentCheck = await runQuery("SELECT id FROM app_users WHERE LOWER(email) = 'resident@jaitra.org'");
+    if (residentCheck.length === 0) {
+      await runQuery(`
+        INSERT INTO app_users (name, email, password, role, tower, flat_no, phone)
+        VALUES ('Resident Member', 'resident@jaitra.org', 'resident123', 'User', 'Tower C', '302', '+91 98451 22334')
+        ON CONFLICT (email) DO UPDATE SET role = 'User'
+      `);
+    }
+  } catch (err) {
+    console.error("ensureAppUsersTable error:", err);
+  }
+}
+
 export async function loginUser(email: string, password: string): Promise<AppUser | null> {
   try {
+    await ensureAppUsersTable();
     const rows = await runQuery(
       "SELECT id, name, email, role, tower, flat_no, phone, created_at FROM app_users WHERE LOWER(email) = LOWER($1) AND password = $2",
       [email.trim(), password.trim()]
@@ -1195,6 +1256,7 @@ export async function loginUser(email: string, password: string): Promise<AppUse
 }
 
 export async function registerUser(data: AppUserRegister): Promise<AppUser> {
+  await ensureAppUsersTable();
   const defaultRole = data.role || "User";
   const res = await runQuery(
     `INSERT INTO app_users (name, email, password, role, tower, flat_no, phone)
@@ -1215,6 +1277,7 @@ export async function registerUser(data: AppUserRegister): Promise<AppUser> {
 
 export async function getUsers(): Promise<AppUser[]> {
   try {
+    await ensureAppUsersTable();
     return await runQuery("SELECT id, name, email, role, tower, flat_no, phone, created_at FROM app_users ORDER BY id ASC");
   } catch (err) {
     console.error("getUsers error:", err);

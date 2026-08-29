@@ -175,7 +175,16 @@ export default function TabNav({ activeTab, onTabChange, badgeCounts, currentUse
     },
   ];
 
-  const tabs = isAuthenticated ? allTabs : allTabs.filter((t) => !t.authRequired);
+  const tabs = React.useMemo(() => {
+    if (!isAuthenticated) {
+      return allTabs.filter((t) => !t.authRequired);
+    }
+    if (currentUser?.role === "Staff") {
+      // Staff role has access strictly to Cultural Events and Community Issues
+      return allTabs.filter((t) => t.id === "culture-events" || t.id === "issues");
+    }
+    return allTabs;
+  }, [isAuthenticated, currentUser, allTabs]);
 
   return (
     <div className="bg-slate-950/95 border-b border-slate-800 sticky top-16 z-30 shadow-2xl backdrop-blur-xl">
