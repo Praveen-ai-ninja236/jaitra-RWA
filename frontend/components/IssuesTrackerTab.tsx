@@ -34,6 +34,7 @@ import {
 import Modal from "./Modal";
 import DynamicSelect from "./DynamicSelect";
 import FileUploadInput from "./FileUploadInput";
+import DocumentPreviewModal from "./DocumentPreviewModal";
 
 interface IssuesTrackerTabProps {
   issues: CommunityIssue[];
@@ -68,6 +69,7 @@ export default function IssuesTrackerTab({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [activeIssueDetail, setActiveIssueDetail] = useState<CommunityIssue | null>(null);
   const [editingIssue, setEditingIssue] = useState<CommunityIssue | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string } | null>(null);
 
   // Sort State
   const [sortField, setSortField] = useState<"created_at" | "priority" | "status" | "tower">("created_at");
@@ -676,12 +678,23 @@ export default function IssuesTrackerTab({
                               </div>
                             )}
 
-                            {/* Attachment proof indicator */}
+                            {/* Attachment proof indicator & View button */}
                             {issue.attachment_url && (
-                              <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-sky-300 bg-sky-950/60 border border-sky-800/60 px-2 py-0.5 rounded-md">
-                                <Paperclip className="w-3 h-3" />
-                                <span>Photo Evidence Attached</span>
-                              </div>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPreviewDoc({
+                                    url: issue.attachment_url!,
+                                    title: `Defect Photo / Evidence: ${issue.title} (${issue.tower})`,
+                                  });
+                                }}
+                                className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-black text-sky-300 hover:text-white bg-sky-950/90 hover:bg-sky-900 border border-sky-600/80 px-2.5 py-1 rounded-xl transition shadow-sm"
+                                title="View Attached Photo / Defect Report"
+                              >
+                                <Eye className="w-3.5 h-3.5 text-sky-400" />
+                                <span>View Photo / Report</span>
+                              </button>
                             )}
                           </div>
 
@@ -823,6 +836,21 @@ export default function IssuesTrackerTab({
                       <td className="p-3.5 text-[11px]">{issue.assigned_to}</td>
                       <td className="p-3.5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {issue.attachment_url && (
+                            <button
+                              onClick={() =>
+                                setPreviewDoc({
+                                  url: issue.attachment_url!,
+                                  title: `Defect Photo / Evidence: ${issue.title} (${issue.tower})`,
+                                })
+                              }
+                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-sky-950/80 hover:bg-sky-900 border border-sky-600/80 text-sky-300 rounded-lg text-xs font-bold transition shadow-xs"
+                              title="View Attached Photo / Document"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>View Proof</span>
+                            </button>
+                          )}
                           <button
                             onClick={() => setActiveIssueDetail(issue)}
                             className="p-1.5 text-slate-400 hover:text-sky-300 rounded-lg hover:bg-slate-800 transition"
@@ -937,15 +965,19 @@ export default function IssuesTrackerTab({
                   <Paperclip className="w-4 h-4 text-sky-400" />
                   <span className="text-slate-200 font-semibold">Attached Photo / Defect Evidence</span>
                 </div>
-                <a
-                  href={currentDetailIssue.attachment_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-3 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1"
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPreviewDoc({
+                      url: currentDetailIssue.attachment_url!,
+                      title: `Defect Evidence: ${currentDetailIssue.title} (${currentDetailIssue.tower})`,
+                    })
+                  }
+                  className="px-3 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
+                  <Eye className="w-3.5 h-3.5" />
                   <span>View Proof</span>
-                </a>
+                </button>
               </div>
             )}
 
@@ -1249,6 +1281,14 @@ export default function IssuesTrackerTab({
           </div>
         </form>
       </Modal>
+
+      {/* Reusable Defect Proof & Document Preview Modal */}
+      <DocumentPreviewModal
+        isOpen={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        url={previewDoc?.url}
+        title={previewDoc?.title}
+      />
     </div>
   );
 }

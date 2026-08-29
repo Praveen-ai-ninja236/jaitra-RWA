@@ -40,10 +40,12 @@ import {
   Table,
   ArrowUpDown,
   Edit,
+  Eye,
 } from "lucide-react";
 import Modal from "./Modal";
 import DynamicSelect from "./DynamicSelect";
 import FileUploadInput from "./FileUploadInput";
+import DocumentPreviewModal from "./DocumentPreviewModal";
 
 interface ADOBorderPendingsTabProps {
   tasks: ADOTask[];
@@ -91,6 +93,7 @@ export default function ADOBorderPendingsTab({
   const [activeTaskDetail, setActiveTaskDetail] = useState<ADOTask | null>(null);
   const [taskDetailTab, setTaskDetailTab] = useState<"discussion" | "evidence" | "edit">("discussion");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string } | null>(null);
 
   // New ADO Task Form State
   const [formData, setFormData] = useState<ADOTaskCreate>({
@@ -1015,16 +1018,24 @@ export default function ADOBorderPendingsTab({
                         <div className="flex items-center gap-2.5">
                           <FileText className="w-4 h-4 text-amber-400 shrink-0" />
                           <div>
-                            <a
-                              href={att.file_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="font-bold text-white hover:text-sky-300 hover:underline flex items-center gap-1"
-                            >
-                              <span>{att.file_name}</span>
-                              <ExternalLink className="w-3 h-3 text-sky-400" />
-                            </a>
-                            <p className="text-[11px] text-slate-400">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-white">{att.file_name}</span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setPreviewDoc({
+                                    url: att.file_url,
+                                    title: `Evidence Document: ${att.file_name}`,
+                                  })
+                                }
+                                className="inline-flex items-center gap-1 text-[11px] font-black text-amber-400 hover:text-amber-300 bg-amber-950/80 hover:bg-amber-900 border border-amber-600/80 px-2 py-0.5 rounded-lg transition"
+                                title="View Attached Evidence / Inspection Report"
+                              >
+                                <Eye className="w-3 h-3" />
+                                <span>View Document</span>
+                              </button>
+                            </div>
+                            <p className="text-[11px] text-slate-400 mt-0.5">
                               {att.description || "Evidence attachment"} • Uploaded by {att.uploaded_by} on {att.created_at}
                             </p>
                           </div>
@@ -1332,6 +1343,14 @@ export default function ADOBorderPendingsTab({
           </form>
         </Modal>
       )}
+
+      {/* Reusable Evidence & Document Preview Modal */}
+      <DocumentPreviewModal
+        isOpen={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        url={previewDoc?.url}
+        title={previewDoc?.title}
+      />
     </div>
   );
 }

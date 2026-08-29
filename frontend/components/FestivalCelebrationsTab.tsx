@@ -39,10 +39,12 @@ import {
   Filter,
   ArrowUpDown,
   FileSpreadsheet,
+  Eye,
 } from "lucide-react";
 import Modal from "./Modal";
 import DynamicSelect from "./DynamicSelect";
 import FileUploadInput from "./FileUploadInput";
+import DocumentPreviewModal from "./DocumentPreviewModal";
 
 interface FestivalCelebrationsTabProps {
   festivals: FestivalCelebration[];
@@ -96,6 +98,7 @@ export default function FestivalCelebrationsTab({
 
   const [editingCollection, setEditingCollection] = useState<FestivalCollection | null>(null);
   const [editingExpense, setEditingExpense] = useState<FestivalExpense | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string } | null>(null);
 
   // Table Filters & Sorting within Detail View
   const [collSearch, setCollSearch] = useState("");
@@ -893,30 +896,46 @@ export default function FestivalCelebrationsTab({
                             </td>
                             <td className="p-2.5 text-slate-400">{col.collected_date}</td>
                             <td className="p-2.5 text-right">
-                              {canEdit ? (
-                                <div className="flex items-center justify-end gap-1.5">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {col.receipt_url && (
                                   <button
-                                    onClick={() => setEditingCollection(col)}
-                                    className="text-slate-400 hover:text-amber-300 p-1"
-                                    title="Edit Collection"
+                                    onClick={() =>
+                                      setPreviewDoc({
+                                        url: col.receipt_url!,
+                                        title: `Collection Receipt: ${col.donor_name} (Flat ${col.flat_no})`,
+                                      })
+                                    }
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/80 text-emerald-300 rounded-lg text-xs font-bold transition shadow-xs"
+                                    title="View Attached Receipt / Proof"
                                   >
-                                    <Edit className="w-3.5 h-3.5" />
+                                    <Eye className="w-3.5 h-3.5" />
+                                    <span>View Receipt</span>
                                   </button>
-                                  <button
-                                    onClick={() => {
-                                      if (confirm(`Delete collection entry for ${col.donor_name}?`)) {
-                                        onDeleteCollection(col.id);
-                                      }
-                                    }}
-                                    className="text-slate-400 hover:text-rose-400 p-1"
-                                    title="Delete Collection"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <span className="text-[10px] text-slate-500 font-mono">Audited</span>
-                              )}
+                                )}
+
+                                {canEdit && (
+                                  <>
+                                    <button
+                                      onClick={() => setEditingCollection(col)}
+                                      className="text-slate-400 hover:text-amber-300 p-1"
+                                      title="Edit Collection"
+                                    >
+                                      <Edit className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        if (confirm(`Delete collection entry for ${col.donor_name}?`)) {
+                                          onDeleteCollection(col.id);
+                                        }
+                                      }}
+                                      className="text-slate-400 hover:text-rose-400 p-1"
+                                      title="Delete Collection"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -1135,21 +1154,42 @@ export default function FestivalCelebrationsTab({
                             {exp.invoice_url && (
                               <>
                                 <span>•</span>
-                                <a
-                                  href={exp.invoice_url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-sky-400 hover:underline flex items-center gap-0.5"
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setPreviewDoc({
+                                      url: exp.invoice_url!,
+                                      title: `Expense Invoice: ${exp.title} (₹${exp.amount.toLocaleString("en-IN")})`,
+                                    })
+                                  }
+                                  className="inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 font-bold hover:underline"
                                 >
-                                  <Paperclip className="w-3 h-3" />
-                                  <span>Bill Proof</span>
-                                </a>
+                                  <Eye className="w-3.5 h-3.5" />
+                                  <span>View Bill / Proof</span>
+                                </button>
                               </>
                             )}
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2.5 self-end sm:self-center">
+                          {exp.invoice_url && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPreviewDoc({
+                                  url: exp.invoice_url!,
+                                  title: `Expense Invoice: ${exp.title} (₹${exp.amount.toLocaleString("en-IN")})`,
+                                })
+                              }
+                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-sky-950/80 hover:bg-sky-900 border border-sky-600/80 text-sky-300 rounded-lg text-xs font-bold transition shadow-xs"
+                              title="View Attached Invoice / Bill"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>View Bill</span>
+                            </button>
+                          )}
+
                           <span className="font-mono font-bold text-rose-400 text-sm">
                             ₹ {exp.amount.toLocaleString("en-IN")}
                           </span>
@@ -1658,6 +1698,14 @@ export default function FestivalCelebrationsTab({
           </form>
         </Modal>
       )}
+
+      {/* Reusable Document & Receipt Preview Modal */}
+      <DocumentPreviewModal
+        isOpen={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        url={previewDoc?.url}
+        title={previewDoc?.title}
+      />
     </div>
   );
 }

@@ -22,10 +22,12 @@ import {
   ExternalLink,
   Edit,
   Paperclip,
+  Eye,
 } from "lucide-react";
 import Modal from "./Modal";
 import DynamicSelect from "./DynamicSelect";
 import FileUploadInput from "./FileUploadInput";
+import DocumentPreviewModal from "./DocumentPreviewModal";
 
 interface GeneralBodyMeetingsTabProps {
   meetings: GeneralBodyMeeting[];
@@ -55,6 +57,7 @@ export default function GeneralBodyMeetingsTab({
   const [editingMeeting, setEditingMeeting] = useState<GeneralBodyMeeting | null>(null);
   const [viewingMeeting, setViewingMeeting] = useState<GeneralBodyMeeting | null>(null);
   const [expandedMeetingId, setExpandedMeetingId] = useState<number | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form State for New Meeting
@@ -309,15 +312,20 @@ export default function GeneralBodyMeetingsTab({
                     &quot;{m.minutes_summary || "Official minutes approved by General Body."}&quot;
                   </p>
                   {m.doc_link && (
-                    <a
-                      href={m.doc_link}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-1 text-[11px] font-bold text-sky-400 hover:text-sky-300 hover:underline ml-3 shrink-0"
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPreviewDoc({
+                          url: m.doc_link!,
+                          title: `Signed Minutes: ${m.meeting_title}`,
+                        })
+                      }
+                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-sky-950/90 hover:bg-sky-900 border border-sky-600 text-sky-300 hover:text-white rounded-xl text-xs font-black transition shadow-sm ml-3 shrink-0"
+                      title="View Signed Minutes & Resolutions Document"
                     >
-                      <Download className="w-3 h-3" />
-                      <span>Signed Minutes PDF</span>
-                    </a>
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>View Minutes Document</span>
+                    </button>
                   )}
                 </div>
 
@@ -714,21 +722,37 @@ export default function GeneralBodyMeetingsTab({
             </div>
 
             {viewingMeeting.doc_link && (
-              <div className="p-3 bg-sky-950/40 rounded-xl border border-sky-800/50">
-                <span className="text-[10px] font-semibold text-sky-400 uppercase">Attached Document</span>
-                <a
-                  href={viewingMeeting.doc_link}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-sky-300 hover:text-sky-200 underline mt-1 inline-block"
+              <div className="p-3 bg-sky-950/60 rounded-xl border border-sky-800/60 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-sky-400 uppercase">Attached Minutes / Document</span>
+                  <p className="text-xs text-slate-200 mt-0.5">Signed Official Resolution File</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPreviewDoc({
+                      url: viewingMeeting.doc_link!,
+                      title: `Signed Minutes: ${viewingMeeting.meeting_title}`,
+                    })
+                  }
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-black transition shadow-md"
                 >
-                  Open Document
-                </a>
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>View Document</span>
+                </button>
               </div>
             )}
           </div>
         </Modal>
       )}
+
+      {/* Document & Minutes Preview Modal */}
+      <DocumentPreviewModal
+        isOpen={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        url={previewDoc?.url}
+        title={previewDoc?.title}
+      />
     </div>
   );
 }
