@@ -69,23 +69,22 @@ export default function HeroBanner({ stats, onSelectTab, onOpenAuditReport, curr
                 </span>
               </button>
 
-              <button
-                onClick={() => {
-                  if (!currentUser) {
-                    alert("Please sign in to view the Financial Audit Report.");
-                    return;
-                  }
-                  if (onOpenAuditReport) {
-                    onOpenAuditReport();
-                  } else {
-                    onSelectTab("festivals");
-                  }
-                }}
-                className="inline-flex items-center gap-2 bg-emerald-600/90 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl border border-emerald-500/40 backdrop-blur transition shadow-md shadow-emerald-600/20"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>Financial Audit Report</span>
-              </button>
+              {/* Financial Audit Report - Only visible to authenticated users */}
+              {currentUser && (
+                <button
+                  onClick={() => {
+                    if (onOpenAuditReport) {
+                      onOpenAuditReport();
+                    } else {
+                      onSelectTab("festivals");
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 bg-emerald-600/90 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl border border-emerald-500/40 backdrop-blur transition shadow-md shadow-emerald-600/20"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>Financial Audit Report</span>
+                </button>
+              )}
 
               <button
                 onClick={() => onSelectTab("vendor-management")}
