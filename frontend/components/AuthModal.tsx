@@ -81,7 +81,7 @@ export default function AuthModal({
       setSignInEmail("superadmin@jaitra.org");
       setSignInPassword("");
     } else if (quickRole === "Admin") {
-      setSignInEmail("admin@jaitra.org");
+      setSignInEmail("admin4u@jaitra.org");
       setSignInPassword("");
     } else if (quickRole === "Staff") {
       setSignInEmail("staff@jaitra.org");

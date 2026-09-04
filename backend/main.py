@@ -1,5 +1,6 @@
 from typing import List, Optional
 import datetime
+import re
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict
@@ -606,17 +607,33 @@ def get_issues(
 @app.post("/api/issues", response_model=CommunityIssueSchema)
 def create_issue(issue: CommunityIssueCreate, db: Session = Depends(get_db)):
     data = issue.model_dump()
-    if not data.get("issue_code"):
+    if not data.get("issue_code") or str(data.get("issue_code")).strip() == "":
         tower_prefix = "TWA"
-        if "Tower B" in data.get("tower", ""): tower_prefix = "TWB"
-        elif "Tower C" in data.get("tower", ""): tower_prefix = "TWC"
-        elif "Tower D" in data.get("tower", ""): tower_prefix = "TWD"
-        elif "Tower E" in data.get("tower", ""): tower_prefix = "TWE"
-        elif "Tower F" in data.get("tower", ""): tower_prefix = "TWF"
-        elif "Clubhouse" in data.get("tower", ""): tower_prefix = "CH"
-        elif "Common" in data.get("tower", ""): tower_prefix = "CS"
-        count = db.query(models.CommunityIssueModel).count() + 1
-        data["issue_code"] = f"ISS-{tower_prefix}-{100 + count}"
+        base_num = 100
+        tower = data.get("tower", "") or ""
+        if "Tower B" in tower: tower_prefix = "TWB"; base_num = 200
+        elif "Tower C" in tower: tower_prefix = "TWC"; base_num = 300
+        elif "Tower D" in tower: tower_prefix = "TWD"; base_num = 400
+        elif "Tower E" in tower: tower_prefix = "TWE"; base_num = 500
+        elif "Tower F" in tower: tower_prefix = "TWF"; base_num = 600
+        elif "Clubhouse" in tower: tower_prefix = "CH"; base_num = 700
+        elif "Common" in tower: tower_prefix = "CS"; base_num = 800
+        
+        existing_issues = db.query(models.CommunityIssueModel.issue_code).all()
+        existing_codes = {i[0].strip() for i in existing_issues if i[0]}
+        max_num = base_num
+        for code in existing_codes:
+            m = re.match(rf"^ISS-{tower_prefix}-(\d+)$", code, re.IGNORECASE)
+            if m:
+                num = int(m.group(1))
+                if num > max_num:
+                    max_num = num
+        candidate = f"ISS-{tower_prefix}-{max_num + 1}"
+        next_num = max_num + 1
+        while candidate in existing_codes:
+            next_num += 1
+            candidate = f"ISS-{tower_prefix}-{next_num}"
+        data["issue_code"] = candidate
     if not data.get("created_at"):
         data["created_at"] = datetime.date.today().isoformat()
     new_issue = models.CommunityIssueModel(**data)
@@ -686,9 +703,22 @@ def get_ado_task(task_id: int, db: Session = Depends(get_db)):
 @app.post("/api/tasks", response_model=ADOTaskSchema)
 def create_ado_task(task: ADOTaskCreate, db: Session = Depends(get_db)):
     data = task.model_dump()
-    if not data.get("task_code"):
-        count = db.query(models.ADOTaskModel).count() + 1
-        data["task_code"] = f"ADO-{100 + count}"
+    if not data.get("task_code") or str(data.get("task_code")).strip() == "":
+        existing_tasks = db.query(models.ADOTaskModel.task_code).all()
+        existing_codes = {t[0].strip() for t in existing_tasks if t[0]}
+        max_num = 100
+        for code in existing_codes:
+            m = re.search(r"(\d+)$", code)
+            if m:
+                num = int(m.group(1))
+                if num > max_num:
+                    max_num = num
+        candidate = f"ADO-{max_num + 1}"
+        next_num = max_num + 1
+        while candidate in existing_codes:
+            next_num += 1
+            candidate = f"ADO-{next_num}"
+        data["task_code"] = candidate
     new_task = models.ADOTaskModel(**data)
     db.add(new_task)
     db.commit()

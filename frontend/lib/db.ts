@@ -716,19 +716,39 @@ export async function getIssue(id: number): Promise<CommunityIssue | null> {
 }
 
 export async function createIssue(data: CommunityIssueCreate): Promise<CommunityIssue> {
-  let code = data.issue_code;
+  let code = data.issue_code?.trim();
   if (!code) {
-    const countRes = await runQuery("SELECT COUNT(*) as cnt FROM community_issues");
-    const nextNum = parseInt(countRes[0]?.cnt || "0") + 101;
     let pfx = "TWA";
-    if (data.tower.includes("Tower B")) pfx = "TWB";
-    else if (data.tower.includes("Tower C")) pfx = "TWC";
-    else if (data.tower.includes("Tower D")) pfx = "TWD";
-    else if (data.tower.includes("Tower E")) pfx = "TWE";
-    else if (data.tower.includes("Tower F")) pfx = "TWF";
-    else if (data.tower.includes("Clubhouse")) pfx = "CH";
-    else if (data.tower.includes("Common")) pfx = "CS";
-    code = `ISS-${pfx}-${nextNum}`;
+    let base = 100;
+    const tower = data.tower || "";
+    if (tower.includes("Tower B")) { pfx = "TWB"; base = 200; }
+    else if (tower.includes("Tower C")) { pfx = "TWC"; base = 300; }
+    else if (tower.includes("Tower D")) { pfx = "TWD"; base = 400; }
+    else if (tower.includes("Tower E")) { pfx = "TWE"; base = 500; }
+    else if (tower.includes("Tower F")) { pfx = "TWF"; base = 600; }
+    else if (tower.includes("Clubhouse")) { pfx = "CH"; base = 700; }
+    else if (tower.includes("Common")) { pfx = "CS"; base = 800; }
+
+    const rows = await runQuery("SELECT issue_code FROM community_issues WHERE issue_code IS NOT NULL");
+    const existingCodes = new Set<string>(rows.map((r: any) => (r.issue_code || "").trim()));
+    const regex = new RegExp(`^ISS-${pfx}-(\\d+)$`, "i");
+    let maxNum = base;
+    existingCodes.forEach((ec) => {
+      const match = ec.match(regex);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (!isNaN(num) && num > maxNum) {
+          maxNum = num;
+        }
+      }
+    });
+    let candidate = `ISS-${pfx}-${maxNum + 1}`;
+    let nextNum = maxNum + 1;
+    while (existingCodes.has(candidate)) {
+      nextNum++;
+      candidate = `ISS-${pfx}-${nextNum}`;
+    }
+    code = candidate;
   }
 
   const res = await runQuery(
@@ -846,9 +866,28 @@ export async function getTask(id: number): Promise<ADOTask | null> {
 }
 
 export async function createTask(data: ADOTaskCreate): Promise<ADOTask> {
-  const countRes = await runQuery("SELECT COUNT(*) as cnt FROM ado_tasks");
-  const nextNum = parseInt(countRes[0]?.cnt || "0") + 101;
-  const code = data.task_code || `ADO-${nextNum}`;
+  let code = data.task_code?.trim();
+  if (!code) {
+    const rows = await runQuery("SELECT task_code FROM ado_tasks WHERE task_code IS NOT NULL");
+    const existingCodes = new Set<string>(rows.map((r: any) => (r.task_code || "").trim()));
+    let maxNum = 100;
+    existingCodes.forEach((ec) => {
+      const match = ec.match(/(\d+)$/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (!isNaN(num) && num > maxNum) {
+          maxNum = num;
+        }
+      }
+    });
+    let candidate = `ADO-${maxNum + 1}`;
+    let nextNum = maxNum + 1;
+    while (existingCodes.has(candidate)) {
+      nextNum++;
+      candidate = `ADO-${nextNum}`;
+    }
+    code = candidate;
+  }
 
   const res = await runQuery(
     `INSERT INTO ado_tasks (task_code, title, assigned_to, entity_type, category, status, priority, assignee_name, due_date, sla_days, blockers, description, completion_percentage, tags)
