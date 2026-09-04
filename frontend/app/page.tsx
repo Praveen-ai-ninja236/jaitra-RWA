@@ -12,6 +12,7 @@ import ADOBorderPendingsTab from "../components/ADOBorderPendingsTab";
 import TeamListTab from "../components/TeamListTab";
 import VendorManagementTab from "../components/VendorManagementTab";
 import ChangeHistoryTab from "../components/ChangeHistoryTab";
+import FlatSummaryTab from "../components/FlatSummaryTab";
 import AuditReportModal from "../components/AuditReportModal";
 import {
   CulturalEvent,
@@ -68,6 +69,7 @@ export default function JaitraPortal() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [vendors, setVendors] = useState<VendorContract[]>([]);
   const [dropdownMap, setDropdownMap] = useState<DropdownCategoryMap>({});
+  const [users, setUsers] = useState<AppUser[]>([]);
 
   // User & Auth State (Defaults to null -> strict View Only for unauthenticated visitors)
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
@@ -119,17 +121,17 @@ export default function JaitraPortal() {
       } catch (e) {}
 
       const hash = window.location.hash.replace("#", "");
-      const allTabs = ["culture-events", "festivals", "gbm", "issues", "ado-board", "team", "vendor-management", "change-history"];
+      const allTabs = ["culture-events", "festivals", "gbm", "issues", "ado-board", "team", "vendor-management", "change-history", "flat-summary"];
       if (allTabs.includes(hash)) {
         setActiveTab(hash);
       }
     }
   }, []);
 
-  // Redirect to public tab if on a restricted tab without auth or if Staff visits unauthorized tab
+  // Redirect to public tab if on a restricted tab without auth or if unauthorized role visits protected tab
   useEffect(() => {
     if (!currentUser) {
-      const restrictedTabs = ["issues", "ado-board", "team", "vendor-management", "change-history"];
+      const restrictedTabs = ["issues", "ado-board", "team", "vendor-management", "change-history", "flat-summary"];
       if (restrictedTabs.includes(activeTab)) {
         setActiveTab("culture-events");
         if (typeof window !== "undefined") {
@@ -139,6 +141,14 @@ export default function JaitraPortal() {
     } else if (currentUser.role === "Staff") {
       const staffAllowedTabs = ["culture-events", "issues"];
       if (!staffAllowedTabs.includes(activeTab)) {
+        setActiveTab("culture-events");
+        if (typeof window !== "undefined") {
+          window.location.hash = "culture-events";
+        }
+      }
+    } else if (currentUser.role === "User") {
+      // Regular User cannot access Admin-only flat-summary tab
+      if (activeTab === "flat-summary") {
         setActiveTab("culture-events");
         if (typeof window !== "undefined") {
           window.location.hash = "culture-events";
@@ -168,6 +178,7 @@ export default function JaitraPortal() {
         vendorsData,
         auditData,
         dropdownData,
+        usersData,
       ] = await Promise.all([
         api.getStats().catch(() => null),
         api.getCulturalEvents().catch(() => []),
@@ -179,6 +190,7 @@ export default function JaitraPortal() {
         api.getVendorContracts().catch(() => []),
         api.getAuditTransactions().catch(() => []),
         api.getDropdownSettingsMap().catch(() => ({})),
+        api.getUsers().catch(() => []),
       ]);
 
       if (statsData) setStats(statsData);
@@ -191,6 +203,7 @@ export default function JaitraPortal() {
       setVendors(vendorsData);
       setAuditTransactions(auditData);
       setDropdownMap(dropdownData);
+      setUsers(usersData);
       setIsBackendConnected(true);
     } catch (err) {
       console.warn("Backend fetch failed, running with local state", err);
@@ -836,6 +849,18 @@ export default function JaitraPortal() {
 
         {activeTab === "change-history" && (
           <ChangeHistoryTab userRole={currentUser?.role || "User"} />
+        )}
+
+        {activeTab === "flat-summary" && (
+          <FlatSummaryTab
+            festivals={festivals}
+            issues={issues}
+            culturalEvents={culturalEvents}
+            gbmMeetings={meetings}
+            users={users}
+            userRole={currentUser?.role || "User"}
+            currentUser={currentUser}
+          />
         )}
       </main>
 

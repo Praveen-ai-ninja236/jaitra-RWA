@@ -483,7 +483,19 @@ export default function IssuesTrackerTab({
                           </h4>
                           <div className="flex items-center gap-1.5 mt-0.5">
                             <span className={`w-2 h-2 rounded-full ${theme.dot}`} />
-                            <span className="text-[11px] text-slate-400 font-bold">Residential Block</span>
+                            <span className="text-[11px] text-slate-400 font-bold">
+                              {item.tower === "Tower A" || item.tower === "Tower B"
+                                ? "Ground + 14 Floors • 75 Flats (5/Fl)"
+                                : item.tower === "Tower C" || item.tower === "Tower D"
+                                ? "Ground + 14 Floors • 120 Flats (8/Fl)"
+                                : item.tower === "Tower E"
+                                ? "Ground + 14 Floors • 105 Flats (7/Fl)"
+                                : item.tower === "Tower F"
+                                ? "Ground + 14 Floors • 90 Flats (6/Fl)"
+                                : item.tower === "Clubhouse"
+                                ? "Clubhouse & Amenities"
+                                : "Jaitra Management & Estate"}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -1316,7 +1328,7 @@ export default function IssuesTrackerTab({
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         title="Report New Community Maintenance Issue"
-        subtitle="Tagged by Tower A-F, Clubhouse, or Common Space"
+        subtitle="Tagged by Towers A-F (Ground + 14 Floors) or Jaitra Management"
         maxWidth="lg"
       >
         <form onSubmit={handleCreateIssue} className="space-y-4">
@@ -1349,7 +1361,7 @@ export default function IssuesTrackerTab({
                 type="text"
                 value={formData.flat_no || ""}
                 onChange={(e) => setFormData({ ...formData, flat_no: e.target.value })}
-                placeholder="e.g. 504 / Parking Bay 12"
+                placeholder="e.g. G01, 101, 705, 1402 (Ground + 14 Floors)"
                 className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white"
               />
             </div>

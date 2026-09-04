@@ -511,12 +511,13 @@ export default function AuthModal({
                         onChange={(e) => setTower(e.target.value)}
                         className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-slate-200 text-xs outline-none"
                       >
-                        <option value="Tower A">Tower A</option>
-                        <option value="Tower B">Tower B</option>
-                        <option value="Tower C">Tower C</option>
-                        <option value="Tower D">Tower D</option>
-                        <option value="Tower E">Tower E</option>
-                        <option value="Tower F">Tower F</option>
+                        <option value="Tower A">Tower A (G+14)</option>
+                        <option value="Tower B">Tower B (G+14)</option>
+                        <option value="Tower C">Tower C (G+14)</option>
+                        <option value="Tower D">Tower D (G+14)</option>
+                        <option value="Tower E">Tower E (G+14)</option>
+                        <option value="Tower F">Tower F (G+14)</option>
+                        <option value="Jaitra Management">Jaitra Management</option>
                       </select>
                     </div>
 
@@ -526,7 +527,7 @@ export default function AuthModal({
                         type="text"
                         value={flatNo}
                         onChange={(e) => setFlatNo(e.target.value)}
-                        placeholder="e.g. 504"
+                        placeholder="e.g. G01, 101, 705, 1402"
                         className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-slate-200 text-xs outline-none"
                       />
                     </div>

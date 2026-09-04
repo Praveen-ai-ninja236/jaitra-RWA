@@ -10,6 +10,7 @@ import {
   Users,
   Briefcase,
   History,
+  Building2,
 } from "lucide-react";
 import { AppUser } from "../lib/types";
 
@@ -20,6 +21,7 @@ export interface TabItem {
   icon: React.ElementType;
   badge?: number | string;
   authRequired?: boolean;
+  adminOnly?: boolean;
   activeClass: string;
   inactiveClass: string;
   activeBadgeClass: string;
@@ -173,15 +175,36 @@ export default function TabNav({ activeTab, onTabChange, badgeCounts, currentUse
       activeIconClass: "text-white",
       inactiveIconClass: "text-violet-400",
     },
+    {
+      id: "flat-summary",
+      label: "9. Flat Directory & Summary",
+      shortLabel: "Flat Summary",
+      icon: Building2,
+      badge: "585",
+      authRequired: true,
+      adminOnly: true,
+      activeClass:
+        "bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white shadow-xl shadow-indigo-600/35 border-2 border-indigo-300 ring-2 ring-indigo-400/50 scale-[1.02]",
+      inactiveClass:
+        "bg-slate-900/90 text-indigo-200/90 hover:text-white hover:bg-indigo-950/60 border border-indigo-900/50 hover:border-indigo-600/70",
+      activeBadgeClass: "bg-white/25 text-white border border-white/40 shadow-inner",
+      inactiveBadgeClass: "bg-indigo-950/90 text-indigo-300 border border-indigo-700/80",
+      activeIconClass: "text-white",
+      inactiveIconClass: "text-indigo-400",
+    },
   ];
 
   const tabs = React.useMemo(() => {
     if (!isAuthenticated) {
-      return allTabs.filter((t) => !t.authRequired);
+      return allTabs.filter((t) => !t.authRequired && !t.adminOnly);
     }
+    const isAdmin = currentUser?.role === "Super Admin" || currentUser?.role === "Admin";
     if (currentUser?.role === "Staff") {
       // Staff role has access strictly to Cultural Events and Community Issues
       return allTabs.filter((t) => t.id === "culture-events" || t.id === "issues");
+    }
+    if (!isAdmin) {
+      return allTabs.filter((t) => !t.adminOnly);
     }
     return allTabs;
   }, [isAuthenticated, currentUser, allTabs]);

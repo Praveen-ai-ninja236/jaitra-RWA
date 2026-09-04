@@ -51,7 +51,7 @@ export default function HeroBanner({ stats, onSelectTab, onOpenAuditReport, curr
               <strong className="font-semibold text-white">Cultural Events &amp; Enrolments</strong>,{" "}
               <strong className="font-semibold text-white">Festival Audit &amp; Approvals</strong>,{" "}
               <strong className="font-semibold text-white">GBM Minutes</strong>,{" "}
-              <strong className="font-semibold text-white">Tower Issues (A-F)</strong>, and{" "}
+              <strong className="font-semibold text-white">Tower Issues (Towers A–F, G+14 Floors)</strong>, and{" "}
               <strong className="font-semibold text-amber-300">ADO Builder Deliverables</strong> with Praneeth
               KKR &amp; IGS.
             </p>

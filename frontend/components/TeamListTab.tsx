@@ -64,7 +64,7 @@ export default function TeamListTab({
 
   const defaultTowers = dropdownMap["towers"]?.length
     ? dropdownMap["towers"]
-    : ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F"];
+    : ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F", "Jaitra Management"];
 
   const ROLE_SORT_ORDER: string[] = [
     "Chairman",
@@ -475,7 +475,7 @@ export default function TeamListTab({
                       required
                       value={formData.wing_flat}
                       onChange={(e) => setFormData({ ...formData, wing_flat: e.target.value })}
-                      placeholder="e.g., Tower B - 604"
+                      placeholder="e.g., Tower B - G02 / Tower A - 604"
                       className="w-full text-xs p-2.5 border rounded-xl bg-slate-800 border-slate-700 text-white focus:outline-none focus:border-emerald-500"
                     />
                   </div>

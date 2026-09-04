@@ -128,7 +128,7 @@ export default function CulturalEventsTab({
 
   const defaultCategories = dropdownMap["cultural_categories"]?.length ? dropdownMap["cultural_categories"] : ["Sports", "Music & Performing Arts", "Kids Workshop", "Health & Wellness", "Cultural & Arts", "Quiz & Debates"];
   const defaultStatuses = ["Upcoming", "Ongoing", "Completed", "Planning"];
-  const defaultTowers = dropdownMap["towers"]?.length ? dropdownMap["towers"] : ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F"];
+  const defaultTowers = dropdownMap["towers"]?.length ? dropdownMap["towers"] : ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F", "Jaitra Management"];
   const defaultActivityCategories = dropdownMap["cultural_activities"]?.length ? dropdownMap["cultural_activities"] : [
     "Badminton Singles",
     "Badminton Doubles",
@@ -581,7 +581,7 @@ export default function CulturalEventsTab({
                           required
                           value={partData.flat_no}
                           onChange={(e) => setPartData({ ...partData, flat_no: e.target.value })}
-                          placeholder="e.g. 502"
+                          placeholder="e.g. G01, 101, 502, 1404 (Ground + 14 Floors)"
                           className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
                         />
                       </div>

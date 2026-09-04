@@ -302,3 +302,45 @@ export interface AuditLogEntry {
 }
 
 export type AuditLogEntryCreate = Omit<AuditLogEntry, "id" | "created_at">;
+
+export interface FlatFestivalStatus {
+  festival_id: number;
+  festival_name: string;
+  status: "Done" | "Not Done";
+  amount?: number;
+  donations_count?: number;
+  transactions?: FestivalCollection[];
+  date?: string;
+  mode?: string;
+  receipt_url?: string;
+}
+
+export interface FlatSummaryItem {
+  id: string;
+  tower: string;
+  floor: number | string;
+  flat_no: string;
+  display_label: string;
+  resident_name?: string;
+  resident_email?: string;
+  resident_phone?: string;
+  resident_role?: string;
+  is_registered_user: boolean;
+  total_donations: number;
+  donations_count: number;
+  festivals_status: Record<number, FlatFestivalStatus>;
+  total_complaints: number;
+  open_complaints: number;
+  in_progress_complaints: number;
+  resolved_complaints: number;
+  complaints_list: CommunityIssue[];
+  total_events_participated: number;
+  events_list: Array<{
+    event_id: number;
+    event_title: string;
+    participant_name: string;
+    activity_category?: string;
+    registration_date?: string;
+  }>;
+  total_gbm_attended: number;
+}

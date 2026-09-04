@@ -156,7 +156,7 @@ export default function FestivalCelebrationsTab({
     transaction_ref: "",
   });
 
-  const defaultTowers = dropdownMap["towers"]?.length ? dropdownMap["towers"] : ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F", "Clubhouse"];
+  const defaultTowers = dropdownMap["towers"]?.length ? dropdownMap["towers"] : ["Tower A", "Tower B", "Tower C", "Tower D", "Tower E", "Tower F", "Jaitra Management"];
   const defaultPaymentModes = dropdownMap["payment_modes"]?.length ? dropdownMap["payment_modes"] : ["UPI", "Cash", "Cheque", "Net Banking", "Card"];
   const defaultExpenseCategories = dropdownMap["expense_categories"]?.length ? dropdownMap["expense_categories"] : ["Decor", "Pooja", "Sound & Light", "Food/Prasadam", "Security", "Priest Dakshina", "Logistics & Stage", "Awards/Gifts", "Printing & Flex"];
 
@@ -728,7 +728,7 @@ export default function FestivalCelebrationsTab({
                           required
                           value={collData.flat_no}
                           onChange={(e) => setCollData({ ...collData, flat_no: e.target.value })}
-                          placeholder="e.g. 402"
+                          placeholder="e.g. G01, 101, 705, 1403 (Ground + 14 Floors)"
                           className="w-full text-xs p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
                         />
                       </div>
